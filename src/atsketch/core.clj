@@ -29,14 +29,34 @@
   (concat ns
           (map - ns)))
 
+(def from-center 36)
+
+(defn map-but-last [f s]
+  (concat (map f (butlast s))
+          [(last s)]))
+(defn map-but-first [f s]
+  (concat [(first s)]
+          (map f (next s))))
+
+(defn distorter [x y]
+  (partial distort-point [x y]))
+
 (def lines
-  (let [offsets (concat [0] (symmetric [5 25 30 35]))]
-    (concat (map (fn [offset]
-                   (map #(distort-point [0 distortion] %) (h-line-points (+ (/ h 2) offset) 0 w 4)))
-                 offsets)
-            (map (fn [offset]
-                   (map #(distort-point [distortion 0] %) (v-line-points (+ (/ w 2) offset) 0 w 4)))
-                 offsets))))
+  (let [offsets (concat [0] (symmetric [5 25 30 35]))
+        dist-x (partial distort-point [5 0])
+        dist-y (partial distort-point [0 5])]
+    (concat (mapcat  (fn [offset]
+                       (let [l1 (h-line-points (+ (/ h 2) offset) 0 (- (/ w 2) from-center) 4)
+                             l2 (h-line-points (+ (/ h 2) offset) (+ (/ w 2) from-center) w 4)]
+                         [(map-but-last dist-y l1)
+                          (map-but-first dist-y l2)]))
+                     offsets)
+            (mapcat  (fn [offset]
+                       (let [l1 (v-line-points (+ (/ w 2) offset) 0 (- (/ h 2) from-center) 4)
+                             l2 (v-line-points (+ (/ w 2) offset) (+ (/ h 2) from-center) h 4)]
+                         [(map-but-last dist-x l1)
+                          (map-but-first dist-x l2)]))
+                     offsets))))
 
 (defn update-state [state] (assoc state :lines lines))
 
