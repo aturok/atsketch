@@ -30,13 +30,15 @@
           (map - ns)))
 
 (def lines
-  (let [offsets (concat [0] (symmetric [5 20 25 30 45 50 55]))]
+  (let [offsets (concat [0] (symmetric [5 25 30 35]))]
     (concat (map (fn [offset]
                    (map #(distort-point [0 distortion] %) (h-line-points (+ (/ h 2) offset) 0 w 4)))
                  offsets)
             (map (fn [offset]
                    (map #(distort-point [distortion 0] %) (v-line-points (+ (/ w 2) offset) 0 w 4)))
                  offsets))))
+
+(defn update-state [state] (assoc state :lines lines))
 
 (defn setup []
   ; Set frame rate to 30 frames per second.
@@ -48,11 +50,6 @@
   {:color {:h 0 :s 0 :b 0}
    :lines lines})
 
-(defn update-state [state] (assoc state :lines lines))
-  ; Update sketch state by changing circle color and position.
-;   {:color (mod (+ (:color state) 0.7) 255)
-;    :angle (- (:angle state) 0.1)})
-;    
 
 (defn draw-line [points]
   (doseq [[[x1 y1] [x2 y2]] (map vector points (next points))]
