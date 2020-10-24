@@ -1,9 +1,10 @@
 (ns atsketch.core
   (:require [quil.core :as q]
-            [quil.middleware :as m]))
+            [quil.middleware :as m]
+            [genartlib.curves :as curves]))
 
-(def w 500)
-(def h 500)
+(def w 1000)
+(def h 1000)
 
 (defn h-line-points [y x-from x-to step]
   (map (fn [x] [x y])
@@ -23,13 +24,10 @@
   (->> (h-line-points 250 0 500 10)
        (map distort-point)))
 
-(def distortion 3)
 
 (defn symmetric [ns]
   (concat ns
           (map - ns)))
-
-(def from-center 36)
 
 (defn map-but-last [f s]
   (concat (map f (butlast s))
@@ -37,26 +35,52 @@
 (defn map-but-first [f s]
   (concat [(first s)]
           (map f (next s))))
+(defn map-but-edges [f s]
+  (concat [(first s)]
+          (map f (butlast (next s)))
+          [(last s)]))
 
 (defn distorter [x y]
   (partial distort-point [x y]))
 
 (def lines
-  (let [offsets (concat [0] (symmetric [5 25 30 35]))
-        dist-x (partial distort-point [5 0])
-        dist-y (partial distort-point [0 5])]
-    (concat (mapcat  (fn [offset]
-                       (let [l1 (h-line-points (+ (/ h 2) offset) 0 (- (/ w 2) from-center) 4)
-                             l2 (h-line-points (+ (/ h 2) offset) (+ (/ w 2) from-center) w 4)]
-                         [(map-but-last dist-y l1)
-                          (map-but-first dist-y l2)]))
-                     offsets)
-            (mapcat  (fn [offset]
-                       (let [l1 (v-line-points (+ (/ w 2) offset) 0 (- (/ h 2) from-center) 4)
-                             l2 (v-line-points (+ (/ w 2) offset) (+ (/ h 2) from-center) h 4)]
-                         [(map-but-last dist-x l1)
-                          (map-but-first dist-x l2)]))
-                     offsets))))
+  (let [from-center 60
+        step 5
+        center-line-step 10
+        distortion 4
+        center-line-distortion 3
+        wc (/ w 2)
+        hc (/ h 2)
+        center-offsets (concat [0] (symmetric [5]))
+        satelite-offsets (symmetric (flatten (repeat 2 [25 30 35 40 45 50])))
+        distorter (fn [x y] (partial distort-point [x y]))
+        dist-x (distorter distortion 0)
+        dist-y (distorter 0 distortion)
+        c-dist-x (distorter center-line-distortion 0)
+        c-dist-y (distorter 0 center-line-distortion)
+
+        center-h-lines (for [v-offset center-offsets
+                             [start end step] [[(- wc from-center) 0 (- center-line-step)]
+                                               [(+ wc from-center) w center-line-step]]]
+                         (map-but-edges c-dist-y (h-line-points (+ hc v-offset) start end step)))
+        center-v-lines (for [h-offset center-offsets
+                             [start end step] [[(- hc from-center) 0 (- center-line-step)]
+                                               [(+ hc from-center) w center-line-step]]]
+                         (map-but-edges c-dist-x (v-line-points (+ wc h-offset) start end step)))
+        satelite-h-lines (for [v-offset satelite-offsets
+                               [start end step] [[(- wc from-center) 0 (- step)]
+                                                 [(+ wc from-center) w step]]]
+                           (map-but-edges dist-y (h-line-points (+ hc v-offset) start end step)))
+        
+        satelite-v-lines (for [h-offset satelite-offsets
+                               [start end step] [[(- hc from-center) 0 (- step)]
+                                                 [(+ hc from-center) w step]]]
+                           (map-but-edges dist-x (v-line-points (+ wc h-offset) start end step)))]
+    (->> (concat center-h-lines
+                 center-v-lines
+                 satelite-h-lines
+                 satelite-v-lines)
+         (map curves/chaikin-curve-retain-ends))))
 
 (defn update-state [state] (assoc state :lines lines))
 
@@ -69,6 +93,9 @@
   ; circle color and position.
   {:color {:h 0 :s 0 :b 0}
    :lines lines})
+
+(defn settings []
+  (q/smooth 2))
 
 
 (defn draw-line [points]
@@ -87,6 +114,7 @@
   :size [w h]
   ; setup function called only once, during sketch initialization.
   :setup setup
+  :settings settings
   ; update-state is called on each iteration before draw-state.
   :update update-state
   :draw draw-state
