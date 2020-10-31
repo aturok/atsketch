@@ -79,26 +79,28 @@
         center-h-lines (for [v-offset center-offsets
                              [start end step] [[(- wc from-center) 0 (- center-line-step)]
                                                [(+ wc from-center) w center-line-step]]]
-                         (map-but-edges c-dist-y (h-line-points (+ hc v-offset) start end step)))
+                         (line :start [start (+ hc v-offset)] :step [step 0] :end [end (+ hc v-offset)]
+                               :distorter c-dist-y :smooth? true :color {:h (rand-int 255) :s 200 :b 255}))
         center-v-lines (for [h-offset center-offsets
                              [start end step] [[(- hc from-center) 0 (- center-line-step)]
                                                [(+ hc from-center) w center-line-step]]]
-                         (map-but-edges c-dist-x (v-line-points (+ wc h-offset) start end step)))
+                         (line :start [(+ wc h-offset) start] :step [0 step] :end [(+ wc h-offset) end]
+                               :distorter c-dist-x :smooth? true  :color {:h (rand-int 255) :s 200 :b 255}))
         satelite-h-lines (for [v-offset satelite-offsets
                                [start end step] [[(- wc from-center) 0 (- step)]
                                                  [(+ wc from-center) w step]]]
-                           (map-but-edges dist-y (h-line-points (+ hc v-offset) start end step)))
+                           (line :start [start (+ hc v-offset)] :step [step 0] :end [end (+ hc v-offset)]
+                                 :distorter dist-y :smooth? true  :color {:h (rand-int 255) :s 200 :b 255}))
         
         satelite-v-lines (for [h-offset satelite-offsets
                                [start end step] [[(- hc from-center) 0 (- step)]
                                                  [(+ hc from-center) w step]]]
-                           (map-but-edges dist-x (v-line-points (+ wc h-offset) start end step)))]
+                           (line :start [(+ wc h-offset) start] :step [0 step] :end [(+ wc h-offset) end]
+                                 :distorter dist-x :smooth? true  :color {:h (rand-int 255) :s 200 :b 255}))]
     (->> (concat center-h-lines
                  center-v-lines
                  satelite-h-lines
-                 satelite-v-lines)
-         (map curves/chaikin-curve-retain-ends)
-         (map (fn [points] {:points points :color {:h 4 :s 180 :b 255}})))))
+                 satelite-v-lines))))
 
 (defn update-state [state] (assoc state :lines lines))
 
