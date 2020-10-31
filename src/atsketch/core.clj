@@ -59,6 +59,8 @@
     {:points (vec points)
      :color color}))
 
+(float (* 255 (/ 334 360)))
+
 (def lines
   (let [from-center 60
         step 5
@@ -74,29 +76,33 @@
         dist-y (distorter 0 distortion)
         c-dist-x (distorter center-line-distortion 0)
         c-dist-y (distorter 0 center-line-distortion)
+        
+        center-colors (mapv (fn [h] {:h h :s 200 :b 255}) [ 230 237])
+        satelite-colors (mapv (fn [h] {:h h :s 200 :b 255}) [128 156 172])
         ;; make less distortion closer to center
+
 
         center-h-lines (for [v-offset center-offsets
                              [start end step] [[(- wc from-center) 0 (- center-line-step)]
                                                [(+ wc from-center) w center-line-step]]]
                          (line :start [start (+ hc v-offset)] :step [step 0] :end [end (+ hc v-offset)]
-                               :distorter c-dist-y :smooth? true :color {:h (rand-int 255) :s 200 :b 255}))
+                               :distorter c-dist-y :smooth? true :color (rand-nth center-colors)))
         center-v-lines (for [h-offset center-offsets
                              [start end step] [[(- hc from-center) 0 (- center-line-step)]
                                                [(+ hc from-center) w center-line-step]]]
                          (line :start [(+ wc h-offset) start] :step [0 step] :end [(+ wc h-offset) end]
-                               :distorter c-dist-x :smooth? true  :color {:h (rand-int 255) :s 200 :b 255}))
+                               :distorter c-dist-x :smooth? true  :color (rand-nth center-colors)))
         satelite-h-lines (for [v-offset satelite-offsets
                                [start end step] [[(- wc from-center) 0 (- step)]
                                                  [(+ wc from-center) w step]]]
                            (line :start [start (+ hc v-offset)] :step [step 0] :end [end (+ hc v-offset)]
-                                 :distorter dist-y :smooth? true  :color {:h (rand-int 255) :s 200 :b 255}))
+                                 :distorter dist-y :smooth? true  :color (rand-nth satelite-colors)))
         
         satelite-v-lines (for [h-offset satelite-offsets
                                [start end step] [[(- hc from-center) 0 (- step)]
                                                  [(+ hc from-center) w step]]]
                            (line :start [(+ wc h-offset) start] :step [0 step] :end [(+ wc h-offset) end]
-                                 :distorter dist-x :smooth? true  :color {:h (rand-int 255) :s 200 :b 255}))]
+                                 :distorter dist-x :smooth? true  :color (rand-nth satelite-colors)))]
     (->> (concat center-h-lines
                  center-v-lines
                  satelite-h-lines
