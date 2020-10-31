@@ -3,8 +3,8 @@
             [quil.middleware :as m]
             [genartlib.curves :as curves]))
 
-(def w 3000)
-(def h 3000)
+(def w 1000)
+(def h 1000)
 
 (defn h-line-points [y x-from x-to step]
   (map (fn [x] [x y])
@@ -169,7 +169,39 @@
             lines
             [])))
 
-(defn update-state [state] (assoc state :lines lines2))
+(defn circle-points-0 [radius step]
+  (let [rsq (* radius radius)
+        other #(Math/sqrt (- rsq (* % %)))
+        points (concat (for [y (range 0 radius step)]
+                         [(- (other y)) y])
+                       (for [y (range radius 0 (- step))]
+                         [(other y) y])
+                       (for [y (range 0 (- radius) (- step))]
+                         [(other y) y])
+                       (for [y (range (- radius) 0 step)]
+                         [(- (other y)) y]))]
+    points))
+
+
+(defn circle-points [[cx cy] radius step]
+  (map (fn [[x y]] [(+ x cx) (+ y cy)]) (circle-points-0 radius step)))
+
+(defn close-line [line]
+  (concat line [(first line)]))
+
+(defn circle-stuff []
+  (let [distortion 25
+        dist-x #(off-xy-center-growing-distort % 1000 h distortion)
+        produce-circle (fn [radius]
+                         (->> (circle-points [(/ w 2) (/ h 2)] radius 50)
+                              (map dist-x)
+                              curves/chaikin-curve
+                              close-line))
+        satelite-colors (mapv (fn [h] {:h h :s 240 :b 220}) [140 128 128 135 156 172])]
+    (for [r (take 5 (iterate #(- % 25) (- (/ w 2) 75)))]
+      {:points (produce-circle r) :color (first satelite-colors)})))
+
+(defn update-state [state] state) ;; (assoc state :lines (circle-stuff)))
 
 (defn setup []
   ; Set frame rate to 30 frames per second.
@@ -179,7 +211,7 @@
   ; setup function returns initial state. It contains
   ; circle color and position.
   {:color {:h 4 :s 0 :b 255}
-   :lines lines})
+   :lines (circle-stuff)})
 
 (defn settings []
   (q/smooth 0))
