@@ -20,9 +20,6 @@
 (defn distort-point [[xd yd] [x y]]
   [(distort-g xd x) (distort-g yd y)])
 
-(defn points []
-  (->> (h-line-points 250 0 500 10)
-       (map distort-point)))
 
 
 (defn symmetric [ns]
@@ -60,25 +57,32 @@
      :color color}))
 
 (float (* 255 (/ 334 360)))
-(let [y 500 center 250 max-off 250]
-  (float (min (/ (Math/abs (- y center)) max-off) 1)))
+
 
 (defn off-center-growing-distort-x [[x y] center max-off max-d]
   [(distort-g (* max-d (float (min (/ (Math/abs (- y center)) max-off) 1))) x) y])
 (defn off-center-growing-distort-y [[x y] center max-off max-d]
   (let [[y x] (off-center-growing-distort-x [y x] center max-off max-d)]
     [x y]))
+(mapv #(- % 30) [65 70 75 80 85 90])
+;; => [35 40 45 50 55 60]
+
+(defn offset-line [{:keys [points color]} [x-offset y-offset] color-offset]
+  {:points (map (fn [[x y]] [(+ x x-offset) (+ y y-offset)]) points)
+   :color {:h (+ (:h color) (:h color-offset))
+           :s (+ (:s color) (:s color-offset))
+           :b (+ (:b color) (:b color-offset))}})
 
 (def lines
-  (let [from-center 60
-        step 5
+  (let [from-center 100
+        step 10
         center-line-step 10
         distortion 4
         center-line-distortion 3
         wc (/ w 2)
         hc (/ h 2)
         center-offsets (concat [0] (symmetric [5]))
-        satelite-offsets (symmetric (flatten (repeat 2 [25 30 35 40 45 50])))
+        satelite-offsets (symmetric (flatten (repeat 1 [35 40 45 50 55 60 65 70 75 80 85 90])))
         distorter (fn [x y] (partial distort-point [x y]))
         ;; dist-x (distorter distortion 0)
         ;; dist-y (distorter 0 0)
@@ -88,7 +92,7 @@
         dist-y #(off-center-growing-distort-y % wc wc distortion)
 
         center-colors (mapv (fn [h] {:h h :s 200 :b 255}) [230 237])
-        satelite-colors (mapv (fn [h] {:h h :s 200 :b 255}) [128 156 172])
+        satelite-colors (mapv (fn [h] {:h h :s 200 :b 255}) [128 128 135 140 156 172])
         ;; make less distortion closer to center
 
 
@@ -115,7 +119,19 @@
                                  :distorter dist-x :smooth? true  :color (rand-nth satelite-colors)))]
     (concat center-h-lines
             center-v-lines
+            (map #(offset-line % [0 1] {:h 0 :s -40 :b -80}) satelite-h-lines)
+            (map #(offset-line % [0 -1] {:h 0 :s -40 :b -80}) satelite-h-lines)
+            (map #(offset-line % [0 2] {:h 0 :s -50 :b -150}) satelite-h-lines)
+            (map #(offset-line % [0 -2] {:h 0 :s -50 :b -150}) satelite-h-lines)
+            (map #(offset-line % [0 3] {:h 0 :s -100 :b -180}) satelite-h-lines)
+            (map #(offset-line % [0 -3] {:h 0 :s -100 :b -180}) satelite-h-lines)
             satelite-h-lines
+            (map #(offset-line % [1 0] {:h 0 :s -40 :b -80}) satelite-v-lines)
+            (map #(offset-line % [-1 0] {:h 0 :s -40 :b -80}) satelite-v-lines)
+            (map #(offset-line % [2 0] {:h 0 :s -50 :b -150}) satelite-v-lines)
+            (map #(offset-line % [-2 0] {:h 0 :s -50 :b -150}) satelite-v-lines)
+            (map #(offset-line % [3 0] {:h 0 :s -100 :b -180}) satelite-v-lines)
+            (map #(offset-line % [-3 0] {:h 0 :s -100 :b -180}) satelite-v-lines)
             satelite-v-lines)))
 
 (defn update-state [state] (assoc state :lines lines))
