@@ -3,8 +3,8 @@
             [quil.middleware :as m]
             [genartlib.curves :as curves]))
 
-(def w 1000)
-(def h 1000)
+(def w 3000)
+(def h 3000)
 
 (defn h-line-points [y x-from x-to step]
   (map (fn [x] [x y])
@@ -64,6 +64,12 @@
 (defn off-center-growing-distort-y [[x y] center max-off max-d]
   (let [[y x] (off-center-growing-distort-x [y x] center max-off max-d)]
     [x y]))
+
+(defn off-xy-center-growing-distort [[x y] center max-off max-d]
+  (let [measure (max (float (min (/ (Math/abs (- y center)) max-off) 1))
+                     (float (min (/ (Math/abs (- x center)) max-off) 1)))]
+    [(distort-g (* max-d measure) x) (distort-g (* max-d measure) y)]))
+
 (mapv #(- % 30) [65 70 75 80 85 90])
 ;; => [35 40 45 50 55 60]
 
@@ -134,7 +140,36 @@
             (map #(offset-line % [-3 0] {:h 0 :s -100 :b -180}) satelite-v-lines)
             satelite-v-lines)))
 
-(defn update-state [state] (assoc state :lines lines))
+(def lines2
+  (let [step 50
+        line-step 50
+        distortion 10
+        satelite-colors (mapv (fn [h] {:h h :s 200 :b 220}) [128 128 135 140 156 172])
+        dist-x #(off-xy-center-growing-distort % 1000 h distortion)
+
+        starts (concat (for [start-x (range 0 (dec w) line-step)]
+                         [start-x 0])
+                       (for [start-y (range line-step (dec h) line-step)]
+                         [0 start-y]))
+
+
+        lines (for [start starts]
+                (line :start start :step [step step] :end [(inc w) (inc h)]
+                      :color (rand-nth satelite-colors)
+                      :distorter dist-x :smooth? true))]
+    (concat []
+            (map #(offset-line % [1 0] {:h 0 :s -80 :b -10}) lines)
+            (map #(offset-line % [-1 0] {:h 0 :s -80 :b -10}) lines)
+            (map #(offset-line % [2 0] {:h 0 :s -90 :b -20}) lines)
+            (map #(offset-line % [-2 0] {:h 0 :s -90 :b -20}) lines)
+            (map #(offset-line % [3 0] {:h 0 :s -100 :b -70}) lines)
+            (map #(offset-line % [-3 0] {:h 0 :s -100 :b -70}) lines)
+            (map #(offset-line % [3 0] {:h 0 :s -110 :b -80}) lines)
+            (map #(offset-line % [-3 0] {:h 0 :s -110 :b -80}) lines)
+            lines
+            [])))
+
+(defn update-state [state] (assoc state :lines lines2))
 
 (defn setup []
   ; Set frame rate to 30 frames per second.
