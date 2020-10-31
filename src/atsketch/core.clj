@@ -60,6 +60,14 @@
      :color color}))
 
 (float (* 255 (/ 334 360)))
+(let [y 500 center 250 max-off 250]
+  (float (min (/ (Math/abs (- y center)) max-off) 1)))
+
+(defn off-center-growing-distort-x [[x y] center max-off max-d]
+  [(distort-g (* max-d (float (min (/ (Math/abs (- y center)) max-off) 1))) x) y])
+(defn off-center-growing-distort-y [[x y] center max-off max-d]
+  (let [[y x] (off-center-growing-distort-x [y x] center max-off max-d)]
+    [x y]))
 
 (def lines
   (let [from-center 60
@@ -72,12 +80,14 @@
         center-offsets (concat [0] (symmetric [5]))
         satelite-offsets (symmetric (flatten (repeat 2 [25 30 35 40 45 50])))
         distorter (fn [x y] (partial distort-point [x y]))
-        dist-x (distorter distortion 0)
-        dist-y (distorter 0 distortion)
+        ;; dist-x (distorter distortion 0)
+        ;; dist-y (distorter 0 0)
         c-dist-x (distorter center-line-distortion 0)
         c-dist-y (distorter 0 center-line-distortion)
-        
-        center-colors (mapv (fn [h] {:h h :s 200 :b 255}) [ 230 237])
+        dist-x #(off-center-growing-distort-x % hc hc distortion)
+        dist-y #(off-center-growing-distort-y % wc wc distortion)
+
+        center-colors (mapv (fn [h] {:h h :s 200 :b 255}) [230 237])
         satelite-colors (mapv (fn [h] {:h h :s 200 :b 255}) [128 156 172])
         ;; make less distortion closer to center
 
@@ -97,16 +107,16 @@
                                                  [(+ wc from-center) w step]]]
                            (line :start [start (+ hc v-offset)] :step [step 0] :end [end (+ hc v-offset)]
                                  :distorter dist-y :smooth? true  :color (rand-nth satelite-colors)))
-        
+
         satelite-v-lines (for [h-offset satelite-offsets
                                [start end step] [[(- hc from-center) 0 (- step)]
                                                  [(+ hc from-center) w step]]]
                            (line :start [(+ wc h-offset) start] :step [0 step] :end [(+ wc h-offset) end]
                                  :distorter dist-x :smooth? true  :color (rand-nth satelite-colors)))]
-    (->> (concat center-h-lines
-                 center-v-lines
-                 satelite-h-lines
-                 satelite-v-lines))))
+    (concat center-h-lines
+            center-v-lines
+            satelite-h-lines
+            satelite-v-lines)))
 
 (defn update-state [state] (assoc state :lines lines))
 
@@ -121,7 +131,7 @@
    :lines lines})
 
 (defn settings []
-  (q/smooth 2))
+  (q/smooth 0))
 
 
 (defn draw-line [{:keys [points color]}]
@@ -133,6 +143,8 @@
   (q/background 0)
   (doall (map draw-line lines)))
 
+(defn mouse-press [& _]
+  (q/save-frame "out/pretty-pic-#####.tiff"))
 
 
 (q/defsketch atsketch
@@ -144,6 +156,7 @@
   ; update-state is called on each iteration before draw-state.
   :update update-state
   :draw draw-state
+  :mouse-clicked mouse-press
 ;   :features [:keep-on-top]
   ; This sketch uses functional-mode middleware.
   ; Check quil wiki for more info about middlewares and particularly
