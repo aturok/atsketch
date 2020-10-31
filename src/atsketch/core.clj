@@ -43,6 +43,22 @@
 (defn distorter [x y]
   (partial distort-point [x y]))
 
+(defn line [& {:keys [start step end color distorter smooth?] :or {smooth? false color {:h 0 :s 0 :b 0}}}]
+  {:pre [(some? start) (some? step) (some? end) (let [[x y] step] (or (not (zero? x)) (not (zero? y))))]
+   :post [(some? (:points %)) (some? (:color %))]}
+  (let [[start-x start-y] start
+        [step-x step-y] step
+        [end-x end-y] end
+        do-distort (if distorter #(map-but-edges distorter %) identity)
+        do-smooth (if smooth? curves/chaikin-curve-retain-ends identity)
+        points (->> (map vector
+                         (if (zero? step-x) (repeat start-x) (range start-x end-x step-x))
+                         (if (zero? step-y) (repeat start-y) (range start-y end-y step-y)))
+                    do-distort
+                    do-smooth)]
+    {:points (vec points)
+     :color color}))
+
 (def lines
   (let [from-center 60
         step 5
@@ -58,6 +74,7 @@
         dist-y (distorter 0 distortion)
         c-dist-x (distorter center-line-distortion 0)
         c-dist-y (distorter 0 center-line-distortion)
+        ;; make less distortion closer to center
 
         center-h-lines (for [v-offset center-offsets
                              [start end step] [[(- wc from-center) 0 (- center-line-step)]
@@ -80,7 +97,8 @@
                  center-v-lines
                  satelite-h-lines
                  satelite-v-lines)
-         (map curves/chaikin-curve-retain-ends))))
+         (map curves/chaikin-curve-retain-ends)
+         (map (fn [points] {:points points :color {:h 4 :s 180 :b 255}})))))
 
 (defn update-state [state] (assoc state :lines lines))
 
@@ -91,20 +109,20 @@
   (q/color-mode :hsb)
   ; setup function returns initial state. It contains
   ; circle color and position.
-  {:color {:h 0 :s 0 :b 0}
+  {:color {:h 4 :s 0 :b 255}
    :lines lines})
 
 (defn settings []
   (q/smooth 2))
 
 
-(defn draw-line [points]
+(defn draw-line [{:keys [points color]}]
+  (q/stroke (:h color) (:s color) (:b color))
   (doseq [[[x1 y1] [x2 y2]] (map vector points (next points))]
     (q/line x1 y1 x2 y2)))
 
 (defn draw-state [{:keys [lines]}]
-  ; Clear the sketch by filling it with light-grey color.
-  (q/background 255)
+  (q/background 0)
   (doall (map draw-line lines)))
 
 
