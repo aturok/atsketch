@@ -201,8 +201,38 @@
     (for [r (take 5 (iterate #(- % 25) (- (/ w 2) 75)))]
       {:points (produce-circle r) :color (first satelite-colors)})))
 
+(defn random-cl [center range mmin mmax]
+  (-> (q/random-gaussian)
+      (* range)
+      (+ center)
+      (max mmin)
+      (min mmax)))
+
 (defn squares []
-  [{:coords {:x 100 :y 100 :w 20 :h 20} :color {:h 100 :s 200 :b 200 :a 255}}])
+  (let [low-band-h (* (float (/ h 3)))
+        low-band-top (- h low-band-h 100)
+        low-band-center (- h 50)
+        gen-size #(random-cl 20 10 4 60)
+        bottoms (vec (repeatedly 800 (fn []
+                                       (let [s (gen-size)
+                                             x (random-cl (* w 0.66) (/ w 4) 0 w)
+                                             y (random-cl low-band-center (/ low-band-h 2) 0 h)]
+                                         {:coords {:x x :y y :w s :h s}
+                                          :color {:h (random-cl 128 10 0 255) :s 255 :b 255
+                                                  :a (random-cl 150 50 0 255)}}))))
+        
+        top-band-h (* (float (/ h 3)))
+        top-band-bottom (+ top-band-h 100)
+        top-band-center 50
+        tops (vec (repeatedly 800 (fn []
+                                    (let [s (gen-size)
+                                          x (random-cl (* w 0.33) (/ w 4) 0 w)
+                                          y (random-cl top-band-center (/ top-band-h 2) 0 h)]
+                                      {:coords {:x x :y y :w s :h s}
+                                       :color {:h (random-cl 200 10 0 255) :s 255 :b 255
+                                               :a (random-cl 150 50 0 255)}}))))]
+    (concat bottoms
+            tops)))
 
 (defn update-state [state] state) ;; (assoc state :lines (circle-stuff)))
 
@@ -233,10 +263,8 @@
   (set-color! q/fill color)
   (q/rect (:x coords) (:y coords) (:w coords) (:h coords)))
 
-(defn draw-state [{:keys [lines rects]}]
-  (q/background 0)
-  (doall (map draw-line lines))
-  
+(defn draw-state [{:keys [rects]}]
+  (q/background 0)  
   (doall (map draw-rect rects)))
 
 (defn mouse-press [& _]
