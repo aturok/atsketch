@@ -217,25 +217,25 @@
         
         top-band-h (* (float (/ h 3)))
         top-band-center 50
-        tops (vec (repeatedly 800 (fn []
+        tops (vec (repeatedly 700 (fn []
                                     (let [[sw sh] (gen-dims)]
-                                      {:coords {:x (random-c (* w 0.25) (/ w 4))
+                                      {:coords {:x (random-c (* w 0.30) (/ w 4))
                                                 :y (random-c top-band-center (/ top-band-h 2))
                                                 :w sw
                                                 :h sh}
-                                       :color {:h (random-cl 230 10 0 255) :s 255 :b 255
+                                       :color {:h (random-cl 235 10 0 255) :s 255 :b 255
                                                :a (random-cl 150 50 0 255)}}))))
         
         low-band-h (* (float (/ h 3)))
-        low-band-center (- h 50)
-        bottoms (vec (repeatedly 800 (fn []
+        low-band-center (- h 80)
+        bottoms (vec (repeatedly 1000 (fn []
                                        (let [[sw sh] (gen-dims)]
-                                         {:coords {:x (random-c (* w 0.75) (/ w 4))
+                                         {:coords {:x (random-c (* w 0.70) (/ w 4))
                                                    :y (random-c low-band-center (/ low-band-h 2))
                                                    :w sw
                                                    :h sh}
-                                          :color {:h (random-cl 148 10 0 255) :s 255 :b 255
-                                                  :a (random-cl 150 50 0 255)}}))))
+                                          :color {:h (random-cl 154 10 0 255) :s 255 :b 255
+                                                  :a (random-cl 150 75 0 255)}}))))
         xxx :xxx]
     (concat bottoms
             tops)))
