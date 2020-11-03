@@ -201,36 +201,42 @@
     (for [r (take 5 (iterate #(- % 25) (- (/ w 2) 75)))]
       {:points (produce-circle r) :color (first satelite-colors)})))
 
-(defn random-cl [center range mmin mmax]
+(defn random-c [center range]
   (-> (q/random-gaussian)
       (* range)
-      (+ center)
+      (+ center)))
+
+(defn random-cl [center range mmin mmax]
+  (-> (random-c center range)
       (max mmin)
       (min mmax)))
 
 (defn squares []
-  (let [low-band-h (* (float (/ h 3)))
-        low-band-top (- h low-band-h 100)
-        low-band-center (- h 50)
-        gen-size #(random-cl 20 10 4 60)
-        bottoms (vec (repeatedly 800 (fn []
-                                       (let [s (gen-size)
-                                             x (random-cl (* w 0.66) (/ w 4) 0 w)
-                                             y (random-cl low-band-center (/ low-band-h 2) 0 h)]
-                                         {:coords {:x x :y y :w s :h s}
-                                          :color {:h (random-cl 128 10 0 255) :s 255 :b 255
-                                                  :a (random-cl 150 50 0 255)}}))))
+  (let [gen-size #(random-cl 20 10 4 30)
+        gen-dims #(sort [(gen-size) (gen-size)])
         
         top-band-h (* (float (/ h 3)))
-        top-band-bottom (+ top-band-h 100)
         top-band-center 50
         tops (vec (repeatedly 800 (fn []
-                                    (let [s (gen-size)
-                                          x (random-cl (* w 0.33) (/ w 4) 0 w)
-                                          y (random-cl top-band-center (/ top-band-h 2) 0 h)]
-                                      {:coords {:x x :y y :w s :h s}
-                                       :color {:h (random-cl 200 10 0 255) :s 255 :b 255
-                                               :a (random-cl 150 50 0 255)}}))))]
+                                    (let [[sw sh] (gen-dims)]
+                                      {:coords {:x (random-c (* w 0.25) (/ w 4))
+                                                :y (random-c top-band-center (/ top-band-h 2))
+                                                :w sw
+                                                :h sh}
+                                       :color {:h (random-cl 230 10 0 255) :s 255 :b 255
+                                               :a (random-cl 150 50 0 255)}}))))
+        
+        low-band-h (* (float (/ h 3)))
+        low-band-center (- h 50)
+        bottoms (vec (repeatedly 800 (fn []
+                                       (let [[sw sh] (gen-dims)]
+                                         {:coords {:x (random-c (* w 0.75) (/ w 4))
+                                                   :y (random-c low-band-center (/ low-band-h 2))
+                                                   :w sw
+                                                   :h sh}
+                                          :color {:h (random-cl 148 10 0 255) :s 255 :b 255
+                                                  :a (random-cl 150 50 0 255)}}))))
+        xxx :xxx]
     (concat bottoms
             tops)))
 
