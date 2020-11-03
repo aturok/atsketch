@@ -201,6 +201,9 @@
     (for [r (take 5 (iterate #(- % 25) (- (/ w 2) 75)))]
       {:points (produce-circle r) :color (first satelite-colors)})))
 
+(defn squares []
+  [{:coords {:x 100 :y 100 :w 20 :h 20} :color {:h 100 :s 200 :b 200 :a 255}}])
+
 (defn update-state [state] state) ;; (assoc state :lines (circle-stuff)))
 
 (defn setup []
@@ -211,20 +214,30 @@
   ; setup function returns initial state. It contains
   ; circle color and position.
   {:color {:h 4 :s 0 :b 255}
+   :rects (squares)
    :lines (circle-stuff)})
 
 (defn settings []
   (q/smooth 0))
 
+(defn set-color! [which {:keys [h s b a] :or {h 0 s 255 b 255 a 255}}]
+  (which h s b a))
 
 (defn draw-line [{:keys [points color]}]
-  (q/stroke (:h color) (:s color) (:b color))
+  (set-color! q/stroke color)
   (doseq [[[x1 y1] [x2 y2]] (map vector points (next points))]
     (q/line x1 y1 x2 y2)))
 
-(defn draw-state [{:keys [lines]}]
+(defn draw-rect [{:keys [coords color]}]
+  (set-color! q/stroke color)
+  (set-color! q/fill color)
+  (q/rect (:x coords) (:y coords) (:w coords) (:h coords)))
+
+(defn draw-state [{:keys [lines rects]}]
   (q/background 0)
-  (doall (map draw-line lines)))
+  (doall (map draw-line lines))
+  
+  (doall (map draw-rect rects)))
 
 (defn mouse-press [& _]
   (q/save-frame "out/pretty-pic-#####.tiff"))
