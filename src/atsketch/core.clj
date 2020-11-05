@@ -292,8 +292,8 @@
                                               :y y
                                               :w sw
                                               :h sh}
-                                     :color {:h 0 :s 0 :b 255
-                                             :a 255}}))))
+                                     :color {:h (random-cl 158 4 0 255) :s 255 :b 255
+                                             :a (random-cl 180 30 0 255)}}))))
         xxx :xxx]
     (concat []
             tops)))
@@ -349,7 +349,7 @@
   (draw-rect rect))
 
 (defn draw-state [{:keys [rects]}]
-  (q/background 20)  
+  (q/background 0)  
   (doall (map draw-rect-with-shadow rects)))
 
 (defn mouse-press [& _]
