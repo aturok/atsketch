@@ -287,12 +287,16 @@
         tops (vec (repeatedly n (fn []
                                   (let [[sw sh] (gen-dims)
                                         x (random-c (* 0.5 w) (* 0.1 w))
-                                        y (random-c (* 0.5 h) (* 0.1 h))]
+                                        y (random-c (* 0.5 h) (* 0.1 h))
+                                        xc (- x (* 0.5 w))
+                                        yc (- y (* 0.5 h))
+                                        sins (/ yc (Math/sqrt (+ (* yc yc) (* xc xc))))]
                                     {:coords {:x x
                                               :y y
                                               :w sw
                                               :h sh}
-                                     :color {:h (random-cl 158 4 0 255) :s 255 :b 255
+                                     :color {:h (+ 200 (* sins 50))
+                                             :s 255 :b 255
                                              :a (random-cl 180 30 0 255)}}))))
         xxx :xxx]
     (concat []
