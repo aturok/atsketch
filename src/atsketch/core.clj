@@ -278,7 +278,27 @@
             bottoms
             tops)))
 
-(defn update-state [state] (assoc state :rects (squares)))
+(defn squares2 []
+  (let [_ (q/random-seed 13)
+        gen-size #(random-cl 20 10 4 30)
+        gen-dims (fn [] [(gen-size) (gen-size)])
+        
+        n (* 2 w)
+        tops (vec (repeatedly n (fn []
+                                  (let [[sw sh] (gen-dims)
+                                        x (random-c (* 0.5 w) (* 0.1 w))
+                                        y (random-c (* 0.5 h) (* 0.1 h))]
+                                    {:coords {:x x
+                                              :y y
+                                              :w sw
+                                              :h sh}
+                                     :color {:h 0 :s 0 :b 255
+                                             :a 255}}))))
+        xxx :xxx]
+    (concat []
+            tops)))
+
+(defn update-state [state] (assoc state :rects (squares2)))
 
 (defn setup []
   ; Set frame rate to 30 frames per second.
@@ -288,8 +308,7 @@
   ; setup function returns initial state. It contains
   ; circle color and position.
   {:color {:h 4 :s 0 :b 255}
-   :rects (squares)
-   :lines (circle-stuff)})
+   :rects (squares2)})
 
 (defn settings []
   (q/smooth 0))
@@ -307,9 +326,31 @@
   (set-color! q/fill color)
   (q/rect (:x coords) (:y coords) (:w coords) (:h coords)))
 
+(defn rect-center [{:keys [x y w h]}]
+  {:x (+ x (* 0.5 w))
+   :y (+ y (* 0.5 h))})
+
+(def shadow-color {:h 0 :s 0 :b 0 :a 100})
+(defn shadow-rect [grow-factor {:keys [coords]}]
+  (let [center (rect-center coords)
+        displacement-x (/ (- (:x center) (* 0.5 w)) (* 0.5 w))
+        displacement-y (/ (- (:y center) (* 0.5 h)) (* 0.5 w))
+        displ-factor 5]
+    {:x (+ (:x coords) (* displacement-x displ-factor))
+     :y (+ (:y coords) (* displacement-y displ-factor))
+     :w (* grow-factor (:w coords))
+     :h (* grow-factor (:h coords))}))
+
+(defn draw-rect-with-shadow [rect]
+  (draw-rect {:coords (shadow-rect 1.10 rect) :color {:h 0 :s 0 :b 0 :a 70}})
+  (draw-rect {:coords (shadow-rect 1.15 rect) :color {:h 0 :s 0 :b 0 :a 70}})
+  (draw-rect {:coords (shadow-rect 1.20 rect) :color {:h 0 :s 0 :b 0 :a 70}})
+  (draw-rect {:coords (shadow-rect 1.25 rect) :color {:h 0 :s 0 :b 0 :a 70}})
+  (draw-rect rect))
+
 (defn draw-state [{:keys [rects]}]
-  (q/background 0)  
-  (doall (map draw-rect rects)))
+  (q/background 20)  
+  (doall (map draw-rect-with-shadow rects)))
 
 (defn mouse-press [& _]
   (q/save-frame "out/pretty-pic-#####.tiff"))
