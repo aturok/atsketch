@@ -21,3 +21,7 @@
   (-> (random-c center range)
       (max mmin)
       (min mmax)))
+
+(defn rrand-uniform [seed]
+  (let [my-rand-root (java.util.Random. seed)]
+    (fn [] (.nextDouble my-rand-root))))

@@ -2,13 +2,13 @@
   (:require [quil.core :as q]
             [quil.middleware :as m]
             [atsketch.shapes :as sh]
-            [atsketch.squares1 :as sq1]
+            [atsketch.squares2 :as sq2]
             [atsketch.draw :as d]))
 
 (def w 1000)
 (def h 1000)
 
-(defn update-state [state] (assoc state :rects (sq1/squares2 w h)))
+(defn update-state [state] (assoc state :rects (sq2/squares3 w h)))
 
 (defn setup []
   ; Set frame rate to 30 frames per second.
@@ -18,7 +18,7 @@
   ; setup function returns initial state. It contains
   ; circle color and position.
   {:color {:h 4 :s 0 :b 255}
-   :rects (sq1/squares2 w h)})
+   :rects (sq2/squares3 w h)})
 
 (defn settings []
   (q/smooth 0))
