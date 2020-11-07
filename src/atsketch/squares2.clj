@@ -28,7 +28,7 @@
                          :a (random-cl 180 30 0 255)})
         
         gray-gen (fn [_] {:h 0
-                          :s 0 :b (random-cl 100 10 0 255)
+                          :s 0 :b (random-cl 80 10 0 255)
                           :a (random-cl 180 30 0 255)})
 
         tl (ush/rects-rect block-cnt
@@ -38,7 +38,7 @@
                             :w (* block-size-rel w)
                             :h (* block-size-rel h)}
                            gen-dims
-                           blue-gen)
+                           red-gen)
 
         tr (ush/rects-rect block-cnt
                            rrand
@@ -47,7 +47,7 @@
                             :w (* block-size-rel w)
                             :h (* block-size-rel h)}
                            gen-dims
-                           red-gen)
+                           blue-gen)
 
         bl (ush/rects-rect block-cnt
                            rrand
@@ -56,16 +56,7 @@
                             :w (* block-size-rel w)
                             :h (* block-size-rel h)}
                            gen-dims
-                           red-gen)
-
-        br (ush/rects-rect block-cnt
-                            rrand
-                            {:x (- w (* block-displ w) (* block-size-rel w))
-                             :y (- h (* block-displ h) (* block-size-rel h))
-                             :w (* block-size-rel w)
-                             :h (* block-size-rel h)}
-                            gen-dims
-                            gray-gen)
+                           gray-gen)
 
 
         _ :_]
@@ -73,5 +64,4 @@
             tl
             tr
             bl
-            br
             [])))
