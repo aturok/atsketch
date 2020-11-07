@@ -18,7 +18,7 @@
 
 (defn draw-rect-with-shadow [rect shadow-displacer]
   (let [drop-shadow (fn [intensity]
-                      {:coords (sh/shadow-rect intensity shadow-displacer rect)
+                      {:coords (sh/shadow-rect (sh/constant-growth intensity) shadow-displacer rect)
                        :color {:h 0 :s 0 :b 0 :a 70}})]
     (draw-rect (drop-shadow 1.10))
     (draw-rect (drop-shadow 1.15))

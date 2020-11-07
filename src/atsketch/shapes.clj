@@ -62,15 +62,20 @@
   {:x (+ x (* 0.5 w))
    :y (+ y (* 0.5 h))})
 
-(defn shadow-rect [grow-factor displacementfn {:keys [coords]}]
-  (let [[displacement-x displacement-y] (displacementfn coords)]
-    {:x (+ (:x coords) displacement-x)
-     :y (+ (:y coords) displacement-y)
-     :w (* grow-factor (:w coords))
-     :h (* grow-factor (:h coords))}))
+(defn shadow-rect [grow-fn displacement-fn {:keys [coords]}]
+  (let [[dx dy] (displacement-fn coords)
+        [w h] (grow-fn coords)]
+    {:x (+ (:x coords) dx)
+     :y (+ (:y coords) dy)
+     :w w
+     :h h}))
 
 (defn from-point-displacer [factor center-x center-y]
   (fn [coords]
     (let [center (rect-center coords)]
       [(* factor (/ (- (:x center) center-x) center-x))
        (* factor (/ (- (:y center) center-y) center-y))])))
+
+(defn constant-growth [factor]
+  (fn [{:keys [w h]}]
+    [(* factor w) (* factor h)]))
