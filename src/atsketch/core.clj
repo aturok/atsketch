@@ -8,7 +8,7 @@
 (def w 1000)
 (def h 1000)
 
-(defn update-state [state] (assoc state :rects (sq2/squares3 w h)))
+(defn update-state [state] (assoc state :rects (sq2/tris1 w h)))
 
 (defn setup []
   ; Set frame rate to 30 frames per second.
@@ -18,7 +18,7 @@
   ; setup function returns initial state. It contains
   ; circle color and position.
   {:color {:h 4 :s 0 :b 255}
-   :rects (sq2/squares3 w h)})
+   :rects (sq2/tris1 w h)})
 
 (defn settings []
   (q/smooth 0))
