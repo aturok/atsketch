@@ -25,3 +25,11 @@
 (defn rrand-uniform [seed]
   (let [my-rand-root (java.util.Random. seed)]
     (fn [] (.nextDouble my-rand-root))))
+
+(defn shuffle [rrand collection]
+  (loop [result [] rest collection]
+    (let [n (int (* (count rest) (rrand)))]
+      (if (seq rest)
+        (recur (conj result (nth rest n))
+               (concat (take n rest) (nthnext rest (inc n))))
+        result))))
