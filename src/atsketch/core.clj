@@ -26,7 +26,7 @@
 
 
 (defn draw-state [{:keys [rects]}]
-  (q/background 255)  
+  (q/background 0)  
   (doall (map #(d/draw-rect-with-shadow % (sh/from-point-displacer 5 (* 0.5 w) (* 0.5 h))) rects)))
 
 (defn mouse-press [& _]

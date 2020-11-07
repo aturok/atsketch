@@ -74,16 +74,16 @@
         block-size-rel 0.3
         bw (* block-size-rel w)
         bh (* block-size-rel h)
-        block-displ 0.15
+        block-displ 0.175
         blb (* block-displ w)
         brb (- w (* block-displ w))
         btb (* block-displ h)
         bbb (- h (* block-displ h))
-        block-cnt (* 0.6 w)
+        block-cnt (* 1 w)
         
         
 
-        gen-size #(random-cl 15 15 4 30)
+        gen-size #(random-cl 10 5 2 15)
         gen-dims (fn [] (sort [(gen-size) (gen-size)]))
 
         blue-gen (fn [_] {:h (random-cl 160 8 0 255)
@@ -95,7 +95,7 @@
                          :a (random-cl 180 30 0 255)})
 
         gray-gen (fn [_] {:h 0
-                          :s 0 :b (random-cl 80 10 0 255)
+                          :s 0 :b (random-cl 250 10 0 255)
                           :a (random-cl 180 30 0 255)})
 
         tl (ush/rects-triangle block-cnt
