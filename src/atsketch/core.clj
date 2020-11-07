@@ -1,83 +1,18 @@
 (ns atsketch.core
   (:require [quil.core :as q]
             [quil.middleware :as m]
+            [atsketch.shapes :as sh :refer [symmetric line offset-line]]
+            [atsketch.distort :as dst :refer [distort-point]]
+            [atsketch.util :as util :refer [random-c random-cl]]
+            [atsketch.draw :as d]
             [genartlib.curves :as curves]))
 
 (def w 1000)
 (def h 1000)
 
-(defn h-line-points [y x-from x-to step]
-  (map (fn [x] [x y])
-       (range x-from x-to step)))
-
-(defn v-line-points [x y-from y-to step]
-  (map (fn [y] [x y])
-       (range y-from y-to step)))
-
-(defn distort-g [d v]
-  (+ v (* d (q/random-gaussian))))
-
-(defn distort-point [[xd yd] [x y]]
-  [(distort-g xd x) (distort-g yd y)])
-
-
-
-(defn symmetric [ns]
-  (concat ns
-          (map - ns)))
-
-(defn map-but-last [f s]
-  (concat (map f (butlast s))
-          [(last s)]))
-(defn map-but-first [f s]
-  (concat [(first s)]
-          (map f (next s))))
-(defn map-but-edges [f s]
-  (concat [(first s)]
-          (map f (butlast (next s)))
-          [(last s)]))
-
-(defn distorter [x y]
-  (partial distort-point [x y]))
-
-(defn line [& {:keys [start step end color distorter smooth?] :or {smooth? false color {:h 0 :s 0 :b 0}}}]
-  {:pre [(some? start) (some? step) (some? end) (let [[x y] step] (or (not (zero? x)) (not (zero? y))))]
-   :post [(some? (:points %)) (some? (:color %))]}
-  (let [[start-x start-y] start
-        [step-x step-y] step
-        [end-x end-y] end
-        do-distort (if distorter #(map-but-edges distorter %) identity)
-        do-smooth (if smooth? curves/chaikin-curve-retain-ends identity)
-        points (->> (map vector
-                         (if (zero? step-x) (repeat start-x) (range start-x end-x step-x))
-                         (if (zero? step-y) (repeat start-y) (range start-y end-y step-y)))
-                    do-distort
-                    do-smooth)]
-    {:points (vec points)
-     :color color}))
-
-(float (* 255 (/ 334 360)))
-
-
-(defn off-center-growing-distort-x [[x y] center max-off max-d]
-  [(distort-g (* max-d (float (min (/ (Math/abs (- y center)) max-off) 1))) x) y])
-(defn off-center-growing-distort-y [[x y] center max-off max-d]
-  (let [[y x] (off-center-growing-distort-x [y x] center max-off max-d)]
-    [x y]))
-
-(defn off-xy-center-growing-distort [[x y] center max-off max-d]
-  (let [measure (max (float (min (/ (Math/abs (- y center)) max-off) 1))
-                     (float (min (/ (Math/abs (- x center)) max-off) 1)))]
-    [(distort-g (* max-d measure) x) (distort-g (* max-d measure) y)]))
 
 (mapv #(- % 30) [65 70 75 80 85 90])
 ;; => [35 40 45 50 55 60]
-
-(defn offset-line [{:keys [points color]} [x-offset y-offset] color-offset]
-  {:points (map (fn [[x y]] [(+ x x-offset) (+ y y-offset)]) points)
-   :color {:h (+ (:h color) (:h color-offset))
-           :s (+ (:s color) (:s color-offset))
-           :b (+ (:b color) (:b color-offset))}})
 
 (def lines
   (let [from-center 100
@@ -94,8 +29,8 @@
         ;; dist-y (distorter 0 0)
         c-dist-x (distorter center-line-distortion 0)
         c-dist-y (distorter 0 center-line-distortion)
-        dist-x #(off-center-growing-distort-x % hc hc distortion)
-        dist-y #(off-center-growing-distort-y % wc wc distortion)
+        dist-x #(dst/off-center-growing-distort-x % hc hc distortion)
+        dist-y #(dst/off-center-growing-distort-y % wc wc distortion)
 
         center-colors (mapv (fn [h] {:h h :s 200 :b 255}) [230 237])
         satelite-colors (mapv (fn [h] {:h h :s 200 :b 255}) [128 128 135 140 156 172])
@@ -145,7 +80,7 @@
         line-step 50
         distortion 10
         satelite-colors (mapv (fn [h] {:h h :s 200 :b 220}) [128 128 135 140 156 172])
-        dist-x #(off-xy-center-growing-distort % 1000 h distortion)
+        dist-x #(dst/off-xy-center-growing-distort % 1000 h distortion)
 
         starts (concat (for [start-x (range 0 (dec w) line-step)]
                          [start-x 0])
@@ -169,47 +104,17 @@
             lines
             [])))
 
-(defn circle-points-0 [radius step]
-  (let [rsq (* radius radius)
-        other #(Math/sqrt (- rsq (* % %)))
-        points (concat (for [y (range 0 radius step)]
-                         [(- (other y)) y])
-                       (for [y (range radius 0 (- step))]
-                         [(other y) y])
-                       (for [y (range 0 (- radius) (- step))]
-                         [(other y) y])
-                       (for [y (range (- radius) 0 step)]
-                         [(- (other y)) y]))]
-    points))
-
-
-(defn circle-points [[cx cy] radius step]
-  (map (fn [[x y]] [(+ x cx) (+ y cy)]) (circle-points-0 radius step)))
-
-(defn close-line [line]
-  (concat line [(first line)]))
-
 (defn circle-stuff []
   (let [distortion 25
-        dist-x #(off-xy-center-growing-distort % 1000 h distortion)
+        dist-x #(dst/off-xy-center-growing-distort % 1000 h distortion)
         produce-circle (fn [radius]
-                         (->> (circle-points [(/ w 2) (/ h 2)] radius 50)
+                         (->> (sh/circle-points [(/ w 2) (/ h 2)] radius 50)
                               (map dist-x)
                               curves/chaikin-curve
-                              close-line))
+                              sh/close-line))
         satelite-colors (mapv (fn [h] {:h h :s 240 :b 220}) [140 128 128 135 156 172])]
     (for [r (take 5 (iterate #(- % 25) (- (/ w 2) 75)))]
       {:points (produce-circle r) :color (first satelite-colors)})))
-
-(defn random-c [center range]
-  (-> (q/random-gaussian)
-      (* range)
-      (+ center)))
-
-(defn random-cl [center range mmin mmax]
-  (-> (random-c center range)
-      (max mmin)
-      (min mmax)))
 
 (defn squares []
   (let [_ (q/random-seed 13)
@@ -317,44 +222,11 @@
 (defn settings []
   (q/smooth 0))
 
-(defn set-color! [which {:keys [h s b a] :or {h 0 s 255 b 255 a 255}}]
-  (which h s b a))
 
-(defn draw-line [{:keys [points color]}]
-  (set-color! q/stroke color)
-  (doseq [[[x1 y1] [x2 y2]] (map vector points (next points))]
-    (q/line x1 y1 x2 y2)))
-
-(defn draw-rect [{:keys [coords color]}]
-  (set-color! q/stroke color)
-  (set-color! q/fill color)
-  (q/rect (:x coords) (:y coords) (:w coords) (:h coords)))
-
-(defn rect-center [{:keys [x y w h]}]
-  {:x (+ x (* 0.5 w))
-   :y (+ y (* 0.5 h))})
-
-(def shadow-color {:h 0 :s 0 :b 0 :a 100})
-(defn shadow-rect [grow-factor {:keys [coords]}]
-  (let [center (rect-center coords)
-        displacement-x (/ (- (:x center) (* 0.5 w)) (* 0.5 w))
-        displacement-y (/ (- (:y center) (* 0.5 h)) (* 0.5 w))
-        displ-factor 5]
-    {:x (+ (:x coords) (* displacement-x displ-factor))
-     :y (+ (:y coords) (* displacement-y displ-factor))
-     :w (* grow-factor (:w coords))
-     :h (* grow-factor (:h coords))}))
-
-(defn draw-rect-with-shadow [rect]
-  (draw-rect {:coords (shadow-rect 1.10 rect) :color {:h 0 :s 0 :b 0 :a 70}})
-  (draw-rect {:coords (shadow-rect 1.15 rect) :color {:h 0 :s 0 :b 0 :a 70}})
-  (draw-rect {:coords (shadow-rect 1.20 rect) :color {:h 0 :s 0 :b 0 :a 70}})
-  (draw-rect {:coords (shadow-rect 1.25 rect) :color {:h 0 :s 0 :b 0 :a 70}})
-  (draw-rect rect))
 
 (defn draw-state [{:keys [rects]}]
   (q/background 0)  
-  (doall (map draw-rect-with-shadow rects)))
+  (doall (map #(d/draw-rect-with-shadow % (sh/from-point-displacer 5 (* 0.5 w) (* 0.5 h))) rects)))
 
 (defn mouse-press [& _]
   (q/save-frame "out/pretty-pic-#####.tiff"))
