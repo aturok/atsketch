@@ -25,3 +25,16 @@
     (draw-rect (drop-shadow 1.20))
     (draw-rect (drop-shadow 1.25))
     (draw-rect rect)))
+
+(defn draw-bezier [{:keys [color weight detail]
+                    [{x1 :x y1 :y}
+                     {x2 :x y2 :y}
+                     {x3 :x y3 :y}
+                     {x4 :x y4 :y}] :points}]
+  (when color
+    (set-color! q/stroke color))
+  (set-color! q/fill {:h 0 :s 0 :b 0 :a 0})
+  (when weight
+    (q/stroke-weight weight))
+  (q/bezier-detail (or detail 20))
+  (q/bezier x1 y1 x2 y2 x3 y3 x4 y4))

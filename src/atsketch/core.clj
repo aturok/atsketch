@@ -3,12 +3,13 @@
             [quil.middleware :as m]
             [atsketch.shapes :as sh]
             [atsketch.squares2 :as sq2]
+            [atsketch.curves :as crv]
             [atsketch.draw :as d]))
 
 (def w 1000)
 (def h 1000)
 
-(defn update-state [state] (assoc state :rects (sq2/tris1 w h)))
+(defn update-state [state] state)
 
 (defn setup []
   ; Set frame rate to 30 frames per second.
@@ -18,16 +19,22 @@
   ; setup function returns initial state. It contains
   ; circle color and position.
   {:color {:h 4 :s 0 :b 255}
-   :rects (sq2/tris1 w h)})
+   :rects (sq2/tris1 w h)
+   :curves (do
+             (q/random-seed 10)
+             (concat (crv/fat-curves w h)
+                     (crv/some-curves w h)))})
 
 (defn settings []
-  (q/smooth 0))
+  (q/smooth 100))
 
 
 
-(defn draw-state [{:keys [rects]}]
-  (q/background 0)  
-  (doall (map #(d/draw-rect-with-shadow % (sh/from-point-displacer 5 (* 0.5 w) (* 0.5 h))) rects)))
+(defn draw-state [{:keys [curves]}]
+  (q/background 25 10 255)
+  (doall (map d/draw-bezier curves)))
+
+;; 400 0 300 200 540 500 400 1000
 
 (defn mouse-press [& _]
   (q/save-frame "out/pretty-pic-#####.tiff"))
