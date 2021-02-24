@@ -7,7 +7,7 @@
             [atsketch.draw :as d]))
 
 (def w 1000)
-(def h 5000)
+(def h 4000)
 
 (defn go-next-frame [{:keys [frame max-frame w h] :as state}]
   (if (>= frame max-frame)
@@ -32,7 +32,7 @@
   ; setup function returns initial state. It contains
   ; circle color and position.
   {:frame 0
-   :max-frame 10
+   :max-frame 100
    :done false
    :w w
    :h h

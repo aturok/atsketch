@@ -12,7 +12,9 @@
         base-x 500
         offset-base 200]
     (-> (repeatedly 10 (fn [] (let [x (random-c base-x 50)]
-                               {:color (update base-color :h (partial + (random-c 0 10)))
+                               {:color (-> base-color
+                                           (update :h #(+ % (random-c 0 10)))
+                                           (update :a #(- % (random-c 100 70))))
                                 :weight (max 1 (random-c 2 2))
                                 :detail 100
                                 :points [{:x x :y 0}
