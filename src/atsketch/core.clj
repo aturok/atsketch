@@ -23,14 +23,14 @@
         r 1600]
     (vec
      (for [i (range n)]
-       (let [basecolor {:h (+ 18 (random-c 0 8)) :s 180 :b 255 :a 250}]
+       (let [basecolor {:h (+ (+ 31 (rand-int 6)) (random-c 0 2)) :s 210 :b 255 :a 250}]
          (vec (for [j (when (not= (int (/ skip 2)) (mod i skip))
                         (range (random-cl (* nits 0.5) (* nits 0.25) 1 (* 1.5 nits))))]
                 {:coords {:x 0
                           :y (+ r (* j displ))
                           :w size
                           :h size}
-                 :color  (update basecolor :a #(- % (+ (* alpha-degrade j) (random-c 0 20))))})))))))
+                 :color  (update basecolor :a #(- % (+ (* alpha-degrade j) (random-c 0 30))))})))))))
 
 (defn go-next-frame [{:keys [frame max-frame] :as state}]
   (if (>= frame max-frame)
@@ -53,22 +53,23 @@
   ; setup function returns initial state. It contains
   ; circle color and position.
   {:frame 0
-   :max-frame 100
+   :max-frame 200
    :done false
    :circle-squares (gen-circle-squares)
    :w w
    :h h
-   :color {:h 4 :s 0 :b 255}
+   :background {:h 25 :s 250 :b 20 :a 255}
+   :color {:h 14 :s 15 :b 15}
    :curves []})
 
 (defn settings []
   (q/smooth 100))
 
-(defn draw-state [{:keys [circle-squares frame done w h]}]
+(defn draw-state [{:keys [circle-squares background frame done w h]}]
   (if done
     (q/background 0)
     (let [g (q/create-graphics w h)]
-      (q/background 25 10 255)
+      (q/background (:h background) (:s background) (:b background) (:a background))
       (let [cx (/ w 2) cy (/ h 2)
             da (/ (* 2 q/PI) (count circle-squares))]
         (q/translate cx cy)
