@@ -17,14 +17,27 @@
   (let [n 550
         size 14
         displ (* 1.25 size)
-        skip 14
         nits 30
         alpha-degrade 5
-        r 1600]
+        r 1600
+        
+        get-color #(cond (and (> % (+ (/ n 4) 4)) (< % (- (/ n 2) 7))) :red
+                         (and (> % (+ (/ n 2) 11)) (< % (- (+ (/ n 2) (/ n 4)) 3))) :blue
+                         :else :black)
+        skip? #(and (> % (- (/ n 2) 5)) (< % (+ (/ n 2) 9)))
+        red-h 253
+        blue-h 141]
     (vec
      (for [i (range n)]
-       (let [basecolor {:h (+ (+ 31 (rand-int 6)) (random-c 0 2)) :s 210 :b 255 :a 250}]
-         (vec (for [j (when (not= (int (/ skip 2)) (mod i skip))
+       (let [c (get-color i)
+             basecolor {:h (+ (rand-int 6) (random-c 0 2)
+                              (cond (= :red c) red-h
+                                    (= :blue c) blue-h
+                                    :else 0))
+                        :s 210
+                        :b (if (= :black c) 0 255)
+                        :a 250}]
+         (vec (for [j (when (not (skip? i))
                         (range (random-cl (* nits 0.5) (* nits 0.25) 1 (* 1.5 nits))))]
                 {:coords {:x 0
                           :y (+ r (* j displ))
@@ -53,12 +66,12 @@
   ; setup function returns initial state. It contains
   ; circle color and position.
   {:frame 0
-   :max-frame 200
+   :max-frame 0
    :done false
    :circle-squares (gen-circle-squares)
    :w w
    :h h
-   :background {:h 25 :s 250 :b 20 :a 255}
+   :background {:h 0 :s 0 :b 255 :a 255}
    :color {:h 14 :s 15 :b 15}
    :curves []})
 
