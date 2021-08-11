@@ -4,6 +4,7 @@
             [atsketch.shapes :as sh]
             [atsketch.squares2 :as sq2]
             [atsketch.curves :as crv]
+            [atsketch.sketch-util :refer [save-frame]]
             [atsketch.util :as util :refer [random-c random-cl]]
             [atsketch.draw :as d]))
 
@@ -94,9 +95,6 @@
 
 ;; 400 0 300 200 540 500 400 1000
 
-(defn mouse-press [& _]
-  (q/save-frame "out/pretty-pic-#####.tiff"))
-
 
 (q/defsketch atsketch
   :title "You spin my circle right round"
@@ -107,7 +105,7 @@
   ; update-state is called on each iteration before draw-state.
   :update go-next-frame
   :draw draw-state
-  :mouse-clicked mouse-press
+  :mouse-clicked save-frame
 ;   :features [:keep-on-top]
   ; This sketch uses functional-mode middleware.
   ; Check quil wiki for more info about middlewares and particularly
