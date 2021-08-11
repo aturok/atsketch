@@ -4,7 +4,7 @@
             [atsketch.shapes :as sh]
             [atsketch.squares2 :as sq2]
             [atsketch.curves :as crv]
-            [atsketch.genesq :as genesq]
+            [atsketch.sketch-util :refer [save-frame]]
             [atsketch.util :as util :refer [random-c random-cl]]
             [atsketch.draw :as d]))
 
@@ -18,20 +18,33 @@
   (let [n 550
         size 14
         displ (* 1.25 size)
-        skip 14
         nits 30
         alpha-degrade 5
-        r 1600]
+        r 1600
+        
+        get-color #(cond (and (> % (+ (/ n 4) 4)) (< % (- (/ n 2) 7))) :red
+                         (and (> % (+ (/ n 2) 11)) (< % (- (+ (/ n 2) (/ n 4)) 3))) :blue
+                         :else :black)
+        skip? #(and (> % (- (/ n 2) 5)) (< % (+ (/ n 2) 9)))
+        red-h 253
+        blue-h 141]
     (vec
      (for [i (range n)]
-       (let [basecolor {:h (+ 18 (random-c 0 8)) :s 180 :b 255 :a 250}]
-         (vec (for [j (when (not= (int (/ skip 2)) (mod i skip))
+       (let [c (get-color i)
+             basecolor {:h (+ (rand-int 6) (random-c 0 2)
+                              (cond (= :red c) red-h
+                                    (= :blue c) blue-h
+                                    :else 0))
+                        :s 210
+                        :b (if (= :black c) 0 255)
+                        :a 250}]
+         (vec (for [j (when (not (skip? i))
                         (range (random-cl (* nits 0.5) (* nits 0.25) 1 (* 1.5 nits))))]
                 {:coords {:x 0
                           :y (+ r (* j displ))
                           :w size
                           :h size}
-                 :color  (update basecolor :a #(- % (+ (* alpha-degrade j) (random-c 0 20))))})))))))
+                 :color  (update basecolor :a #(- % (+ (* alpha-degrade j) (random-c 0 30))))})))))))
 
 (defn go-next-frame [{:keys [frame max-frame] :as state}]
   (if (>= frame max-frame)
@@ -53,47 +66,36 @@
   (q/color-mode :hsb)
   ; setup function returns initial state. It contains
   ; circle color and position.
-  (let [genes (vec (take (* 200 200) (repeatedly genesq/x-gene)))
-        fene-gen (genesq/fene-generator {:rows 200
-                                         :cols 200
-                                         :w 4
-                                         :h 4
-                                         :d-row 5
-                                         :d-col 5})]
-    {:frame 0
-     :max-frame 0
-     :done false
-     :fene-gen fene-gen
-     :genes genes
-     :fenes (fene-gen genes)
-     :w w
-     :h h
-     :color {:h 4 :s 0 :b 255}
-     :curves []}))
+  {:frame 0
+   :max-frame 0
+   :done false
+   :circle-squares (gen-circle-squares)
+   :w w
+   :h h
+   :background {:h 0 :s 0 :b 255 :a 255}
+   :color {:h 14 :s 15 :b 15}
+   :curves []})
 
 (defn settings []
   (q/smooth 100))
 
-(defn draw-state [{:keys [fenes frame w h]}]
-  (if false
+(defn draw-state [{:keys [circle-squares background frame done w h]}]
+  (if done
     (q/background 0)
     (let [g (q/create-graphics w h)]
-      (q/background -0 0 0)
-      (doseq [f fenes]
-        (d/draw-rect f))
-      (comment (q/save (str "/out/genesq/" (format "%04d" frame) ".png"))))))
+      (q/background (:h background) (:s background) (:b background) (:a background))
+      (let [cx (/ w 2) cy (/ h 2)
+            da (/ (* 2 q/PI) (count circle-squares))]
+        (q/translate cx cy)
+        (doseq [row circle-squares]
+          (doseq [s row]
+            (d/draw-rect s))
+          (q/rotate da)))
+      (q/save (str "/out/sun/" (format "%04d" frame) ".png")))))
 
 ;; 400 0 300 200 540 500 400 1000
 
-(defn mouse-press [& _]
-  (q/save-frame "out/pretty-pic-#####.tiff"))
 
-
-(defn key-pressed [{:keys [fene-gen] :as state} {:keys [key]}]
-  (if (= :right key)
-    (let [new-g (vec (take (* 200 200) (repeatedly genesq/x-gene)))]
-      (assoc state :genes new-g :fenes (fene-gen new-g)))
-    state))
 
 (q/defsketch atsketch
   :title "You spin my circle right round"
@@ -104,8 +106,7 @@
   ; update-state is called on each iteration before draw-state.
   :update go-next-frame
   :draw draw-state
-  :mouse-clicked mouse-press
-  :key-pressed key-pressed
+  :mouse-clicked save-frame
 ;   :features [:keep-on-top]
   ; This sketch uses functional-mode middleware.
   ; Check quil wiki for more info about middlewares and particularly
