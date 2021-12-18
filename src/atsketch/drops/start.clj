@@ -3,10 +3,9 @@
             [quil.middleware :as m]
             [atsketch.util :as util]))
 
-(defn draw-pixel [color]
-  (let [size 20]
-    (apply q/fill color)
-    (q/rect 0 0 size size)))
+(defn draw-pixel [{:keys [color size]}]
+  (apply q/fill color)
+  (q/rect 0 0 size size))
 
 (def w 1000)
 (def h w)
@@ -17,28 +16,37 @@
     (q/fill 0 0 0 0)
     (q/stroke-weight 0)
     (q/rect-mode :center)
-    (doseq [{[x y] :origin :keys [color]} pixels]
+    (doseq [{[x y] :origin :as pixel} pixels]
       (q/push-matrix)
-      (q/translate (+ (/ w 2) x) (+ (/ h 2) y))
-      (draw-pixel color)
+      (q/translate (+ (* 0.5 w) x) (+ (* 0.6 h) y))
+      (draw-pixel pixel)
       (q/pop-matrix))))
 
 (defn upd-state [{:keys [w h]}]
-  {:w w
-   :h h
-   :go true
-   :background [0 0 0 255]
-   :color [140 250 250 230]
-   :pixels (do (q/random-seed 19)
-               (->> (fn []
-                      {:color [(q/random 120 180) 250 250 (q/random 150 250)]
-                       :origin (let [y (q/random (- (* 0.2 h)) (* 0.2 h))]
-                                 [(q/random (- (* 0.2 w)) (* 0.2 w))
-                                  y])})
-                    (repeatedly 1000)
-                    (filter (fn [{[x y] :origin}]
-                              (< (* x x) (* y y) (* 0.2 w 0.2 w))))
-                    vec))})
+  (let [displ (* 0.1 h)
+        dh (* 0.4 h)
+        r (* 0.2 h)
+        yfn #(- (* %1 (/ (- dh displ) (* %2 (Math/sqrt (- (* r r) (* displ displ)))))) dh)]
+    {:w w
+     :h h
+     :go true
+     :background [0 0 0 255]
+     :color [140 250 250 230]
+     :pixels (do (q/random-seed 19)
+                 (->> (fn []
+                        {:color [(q/random 5 15) 255 250 (q/random 150 200)]
+                         :origin (let [y (q/random (- 0 r dh) r)]
+                                   [(q/random (- r) r)
+                                    y])
+                         :size 8})
+                      (repeatedly 3000)
+                      (filter (fn [{[x y] :origin}]
+                                (or (< (+ (* x x) (* y y)) (* r r))
+                                    (and (< y (- displ))
+                                         (> y (yfn x 1))
+                                         (> y (yfn x -1))))
+                                ))
+                      vec))}))
 
 (q/defsketch atsketch
   :title "You spin my circle right round"
