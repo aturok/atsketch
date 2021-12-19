@@ -24,22 +24,22 @@
 
 (defn upd-state [{:keys [w h]}]
   (let [displ (* 0.1 h)
-        dh (* 0.4 h)
+        dh (* 0.36 h)
         r (* 0.2 h)
         yfn #(- (* %1 (/ (- dh displ) (* %2 (Math/sqrt (- (* r r) (* displ displ)))))) dh)]
     {:w w
      :h h
      :go true
-     :background [0 0 0 255]
+     :background [35 20 255 50]
      :color [140 250 250 230]
-     :pixels (do (q/random-seed 19)
+     :pixels (do (q/random-seed 20)
                  (->> (fn []
-                        {:color [(q/random 5 15) 255 250 (q/random 150 200)]
+                        {:color [(q/random 5 15) 255 0 (q/random 100 230)]
                          :origin (let [y (q/random (- 0 r dh) r)]
                                    [(q/random (- r) r)
                                     y])
                          :size 8})
-                      (repeatedly 3000)
+                      (repeatedly 10000)
                       (filter (fn [{[x y] :origin}]
                                 (or (< (+ (* x x) (* y y)) (* r r))
                                     (and (< y (- displ))
