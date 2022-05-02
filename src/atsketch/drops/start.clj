@@ -12,6 +12,45 @@
 (def screen-w w)
 (def screen-h h)
 
+(defn- draw-strawbery []
+  (q/rotate (q/radians 60))
+  (apply q/fill [10 255 200 240])
+  (q/rect-mode :corner)
+  (q/rect 0 0 150 105)
+  
+  (apply q/fill [10 100 255 200])
+  (q/rect-mode :corner)
+  (doseq [_ (range 20)]
+    (q/rect (q/random 5 145) (q/random 5 100) (q/random 2 4) (q/random 2 4)))
+  (q/rect-mode :center))
+
+(defn- draw-glass [{:keys [w h bottom-h side-w rim-w]
+                    :or {side-w 10
+                         rim-w 2.5}}]
+  (q/rect-mode :corner)
+  (q/push-matrix)
+  (q/stroke-weight 0)
+  (apply q/fill [0 0 250 40])
+  (q/rect (- (* 0.5 screen-w) (* 0.5 w) side-w) 0 side-w (- h bottom-h))
+  (q/rect (+ (* 0.5 screen-w) (* 0.5 w) side-w) 0 (- side-w) (- h bottom-h))
+
+  (q/rect (- (* 0.5 screen-w) (* 0.5 w) side-w)
+          (- h bottom-h 0)
+          (+ w side-w side-w)
+          bottom-h)
+  (q/rect (- (* 0.5 screen-w) (* 0.5 w) side-w)
+          (- rim-w)
+          (+ w side-w side-w)
+          rim-w)
+
+  (apply q/fill [0 0 100 50])
+  (q/rect (- (* 0.5 screen-w) (* 0.5 w))
+          0
+          w
+          (- h bottom-h))
+
+  (q/pop-matrix))
+
 (defn draw-state [{:keys [background go parts]}]
   (when go
     (apply q/background background)
@@ -20,10 +59,8 @@
     (q/rect-mode :center)
 
     (q/push-matrix)
-    (q/translate (- (* 0.5 screen-w) (* 0.5 (:w (first parts))) 20) (+ (* 0.4 screen-h) 20))
-    (q/rotate (q/radians 60))
-    (apply q/fill [10 255 200 240])
-    (q/rect 0 0 150 105)
+    (q/translate (- (* 0.5 screen-w) (* 0.5 (:w (first parts))) 20) (+ (* 0.3 screen-h) 20))
+    (draw-strawbery)
     (q/pop-matrix)
 
     (doseq [{:keys [y w h color] :as part} parts]
@@ -33,25 +70,11 @@
       (q/rect 0 0 w h)
       (q/pop-matrix))
     
-    (q/rect-mode :corner)
     (q/push-matrix)
-    (apply q/fill [0 0 100 100])
-    (q/rect (- (* 0.5 screen-w) (* 0.5 (:w (first parts))) 10) (* 0.4 screen-h) 10 (* 0.35 screen-h))
-    (q/rect (+ (* 0.5 screen-w) (* 0.5 (:w (first parts))) 10) (* 0.4 screen-h) -10 (* 0.35 screen-h))
-
-    (apply q/fill [0 0 100 50])
-    (q/rect (- (* 0.5 screen-w) (* 0.5 (:w (first parts))))
-            (* 0.4 screen-h)
-            (:w (first parts))
-            (* 0.35 screen-h))
-
-    (apply q/fill [0 0 100 120])
-    (q/rect (- (* 0.5 screen-w) (* 0.5 (:w (first parts))))
-            ;; (- (+ (* 0.4 screen-h) (* 5.5 (:h (first parts)))))
-            ;; (- (+ (* 0.4 screen-h) (* 0.35 screen-h)) (* 0.5 (:h (first parts))))
-            (- (+ (* 0.4 screen-h) (* 3.5 (:h (first parts)))) (* 0.5 (:h (first parts))))
-            (:w (first parts))
-            (* 0.5 (:h (first parts))))
+    (q/translate 0 (* 0.4 screen-h))
+    (draw-glass {:w (:w (first parts))
+                 :h (* 0.347 screen-h)
+                 :bottom-h (* 0.5 (:h (first parts)))})
     (q/pop-matrix)))
 
 (defn upd-state [{:keys [w h]}]
