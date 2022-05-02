@@ -9,29 +9,77 @@
 
 (def w 1000)
 (def h w)
+(def screen-w w)
+(def screen-h h)
 
-(defn draw-state [{:keys [background go pixels]}]
+(defn draw-state [{:keys [background go parts]}]
   (when go
     (apply q/background background)
     (q/fill 0 0 0 0)
     (q/stroke-weight 0)
     (q/rect-mode :center)
-    (doseq [{[x y] :origin :as pixel} pixels]
+
+    (q/push-matrix)
+    (q/translate (- (* 0.5 screen-w) (* 0.5 (:w (first parts))) 20) (+ (* 0.4 screen-h) 20))
+    (q/rotate (q/radians 60))
+    (apply q/fill [10 255 200 240])
+    (q/rect 0 0 150 105)
+    (q/pop-matrix)
+
+    (doseq [{:keys [y w h color] :as part} parts]
       (q/push-matrix)
-      (q/translate (+ (* 0.5 w) x) (+ (* 0.6 h) y))
-      (draw-pixel pixel)
-      (q/pop-matrix))))
+      (q/translate (* 0.5 screen-w) y)
+      (apply q/fill color)
+      (q/rect 0 0 w h)
+      (q/pop-matrix))
+    
+    (q/rect-mode :corner)
+    (q/push-matrix)
+    (apply q/fill [0 0 100 100])
+    (q/rect (- (* 0.5 screen-w) (* 0.5 (:w (first parts))) 10) (* 0.4 screen-h) 10 (* 0.35 screen-h))
+    (q/rect (+ (* 0.5 screen-w) (* 0.5 (:w (first parts))) 10) (* 0.4 screen-h) -10 (* 0.35 screen-h))
+
+    (apply q/fill [0 0 100 50])
+    (q/rect (- (* 0.5 screen-w) (* 0.5 (:w (first parts))))
+            (* 0.4 screen-h)
+            (:w (first parts))
+            (* 0.35 screen-h))
+
+    (apply q/fill [0 0 100 120])
+    (q/rect (- (* 0.5 screen-w) (* 0.5 (:w (first parts))))
+            ;; (- (+ (* 0.4 screen-h) (* 5.5 (:h (first parts)))))
+            ;; (- (+ (* 0.4 screen-h) (* 0.35 screen-h)) (* 0.5 (:h (first parts))))
+            (- (+ (* 0.4 screen-h) (* 3.5 (:h (first parts)))) (* 0.5 (:h (first parts))))
+            (:w (first parts))
+            (* 0.5 (:h (first parts))))
+    (q/pop-matrix)))
 
 (defn upd-state [{:keys [w h]}]
   (let [displ (* 0.1 h)
         dh (* 0.36 h)
         r (* 0.2 h)
-        yfn #(- (* %1 (/ (- dh displ) (* %2 (Math/sqrt (- (* r r) (* displ displ)))))) dh)]
+        yfn #(- (* %1 (/ (- dh displ) (* %2 (Math/sqrt (- (* r r) (* displ displ)))))) dh)
+        layer-h (* 0.1 h)
+        layer-w (* 0.2 w)
+        layer-displ (- (* 0.01 layer-h))
+        layer-y #(+ (* 0.5 h) (* % (+ layer-h layer-displ)))]
     {:w w
      :h h
      :go true
-     :background [35 20 255 50]
+     :background [0 0 0 250]
      :color [140 250 250 230]
+     :parts [{:y (+ (* 0.5 h) (* 0 (+ layer-h layer-displ)))
+              :w layer-w
+              :h layer-h
+              :color [110 0 255 20]}
+             {:y (+ (* 0.5 h) (* 1 (+ layer-h layer-displ)))
+              :w layer-w
+              :h layer-h
+              :color [155 255 255 140]}
+             {:y (+ (* 0.5 h) (+ layer-h layer-displ) (+ (* 0.75 layer-h) layer-displ))
+              :w layer-w
+              :h (* 0.5 layer-h)
+              :color [44 255 255 160]}]
      :pixels (do (q/random-seed 20)
                  (->> (fn []
                         {:color [(q/random 5 15) 255 0 (q/random 100 230)]
