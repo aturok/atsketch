@@ -156,7 +156,7 @@
     (q/translate (* 0.7 screen-w) (* 0.7 screen-h))
     (q/rotate (q/radians -12))
     (q/scale 2)
-    (draw-signature :color [142 150 255])
+    (draw-signature :color [162 200 255])
     (q/pop-matrix)))
 
 (defn upd-state [{:keys [w h] :as original}]
