@@ -52,15 +52,34 @@
           (- h bottom-h))
 
   (let [flare-h (+ h rim-w)
-        flare-off -7]
-    (apply q/fill [0 0 255 125])
-    (q/rect (- (* 0.5 screen-w) (* 0.5 w) side-w flare-off) (- rim-w) 1 flare-h)
-    (apply q/fill [0 0 255 200])
-    (q/rect (- (* 0.5 screen-w) (* 0.5 w) side-w (+ 1 flare-off)) (- rim-w) 1 flare-h)
-    (apply q/fill [0 0 255 125])
-    (q/rect (- (* 0.5 screen-w) (* 0.5 w) side-w (+ 2 flare-off)) (- rim-w) 1 flare-h)
-    (apply q/fill [0 0 255 100])
-    (q/rect (- (* 0.5 screen-w) (* 0.5 w) side-w (+ 3 flare-off)) (- rim-w) 1 flare-h))
+        flare-off -8
+        flare-sw 8]
+    (apply q/fill [0 0 255 20])
+    (q/rect (- (* 0.5 screen-w) (* 0.5 w) side-w flare-off) (- rim-w) flare-sw flare-h)
+    (apply q/fill [0 0 255 30])
+    (q/rect (- (* 0.5 screen-w) (* 0.5 w) side-w (+ 2 flare-off)) (- rim-w) flare-sw flare-h)
+    (apply q/fill [0 0 255 35])
+    (q/rect (- (* 0.5 screen-w) (* 0.5 w) side-w (+ 4 flare-off)) (- rim-w) flare-sw flare-h)
+    (apply q/fill [0 0 255 25])
+    (q/rect (- (* 0.5 screen-w) (* 0.5 w) side-w (+ 6 flare-off)) (- rim-w) flare-sw flare-h))
+  
+  (let [flare-h (+ h rim-w)
+        flare-off -10
+        flare-sw 4]
+    (apply q/fill [0 0 0 40])
+    (q/rect (+ (* 0.5 screen-w) (* 0.5 w) side-w flare-off) (- rim-w) flare-sw flare-h)
+    (apply q/fill [0 0 0 50])
+    (q/rect (+ (* 0.5 screen-w) (* 0.5 w) side-w (+ 2 flare-off)) (- rim-w) flare-sw flare-h)
+    (apply q/fill [0 0 255 25])
+    (q/rect (+ (* 0.5 screen-w) (* 0.5 w) side-w (+ 2 flare-off)) (- rim-w) 2 flare-h)
+    (apply q/fill [0 0 0 45])
+    (q/rect (+ (* 0.5 screen-w) (* 0.5 w) side-w (+ 4 flare-off)) (- rim-w) flare-sw flare-h)
+    (apply q/fill [0 0 0 25])
+    (q/rect (+ (* 0.5 screen-w) (* 0.5 w) side-w (+ 6 flare-off)) (- rim-w) flare-sw flare-h)
+    (apply q/fill [0 0 0 15])
+    (q/rect (+ (* 0.5 screen-w) (* 0.5 w) side-w (+ 8 flare-off)) (- rim-w) flare-sw flare-h)
+    (apply q/fill [0 0 0 10])
+    (q/rect (+ (* 0.5 screen-w) (* 0.5 w) side-w (+ 10 flare-off)) (- rim-w) flare-sw flare-h))
 
   (q/pop-matrix))
 
