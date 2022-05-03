@@ -51,6 +51,19 @@
 
   (q/pop-matrix))
 
+(defn draw-description [& {:keys [lines size line-height]}]
+  (q/push-matrix)
+  (let [main-text-size (or size 16)
+        main-line-height (or 1.25 line-height)]
+    (doall
+     (map-indexed (fn [idx {:keys [text size color offset line-height]}]
+                    (q/text-size (or size main-text-size))
+                    (apply q/fill color)
+                    (q/text text (or offset 0) 0)
+                    (q/translate 0 (* (or line-height main-line-height) (or size main-text-size))))
+                  lines))
+    (q/pop-matrix)))
+
 (defn draw-state [{:keys [background go parts]}]
   (when go
     (apply q/background background)
@@ -75,6 +88,16 @@
     (draw-glass {:w (:w (first parts))
                  :h (* 0.347 screen-h)
                  :bottom-h (* 0.5 (:h (first parts)))})
+    (q/pop-matrix)
+    
+    (q/push-matrix)
+    (q/translate (* 0.1 screen-w) (* 0.25 screen-h))
+    (draw-description :lines [{:text "Sand Jinn" :color [155 255 255 220] :size 22 :offset -10 :line-height 1.1}
+                              {:text "Limoncello, 1pt" :color [0 0 255 200] :size 14}
+                              {:text "Blue curacao, 2pts" :color [0 0 255 200] :size 14}
+                              {:text "Gin, 2pts" :color [0 0 255 200] :size 14}
+                              {:text "Strawberry" :color [0 0 255 200] :size 14}]
+                      :offset 20)
     (q/pop-matrix)))
 
 (defn upd-state [{:keys [w h]}]
