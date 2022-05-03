@@ -1,6 +1,7 @@
 (ns atsketch.drops.start
   (:require [quil.core :as q]
             [quil.middleware :as m]
+            [clojure.java.io :as io]
             [atsketch.util :as util]
             [atsketch.signature :refer [draw-signature]]))
 
@@ -60,20 +61,22 @@
     (q/rect 0 0 w h)
     (q/pop-matrix)))
 
-(defn draw-description [& {:keys [lines size line-height]}]
+(defn draw-description [& {:keys [lines size line-height font]}]
   (q/push-matrix)
   (let [main-text-size (or size 16)
         main-line-height (or 1.25 line-height)]
     (doall
      (map-indexed (fn [idx {:keys [text size color offset line-height]}]
-                    (q/text-size (or size main-text-size))
+                    (if font
+                      (q/text-font (q/create-font font (or size main-text-size)))
+                      (q/text-size (or size main-text-size)))
                     (apply q/fill color)
                     (q/text text (or offset 0) 0)
                     (q/translate 0 (* (or line-height main-line-height) (or size main-text-size))))
                   lines))
     (q/pop-matrix)))
 
-(defn draw-state [{:keys [background go parts]}]
+(defn draw-state [{:keys [background go parts fonts]}]
   (when go
     (apply q/background background)
     (q/fill 0 0 0 0)
@@ -101,7 +104,8 @@
                               {:text "Blue curacao, 2pts" :color [0 0 255 200] :size 14}
                               {:text "Gin, 2pts" :color [0 0 255 200] :size 14}
                               {:text "Strawberry" :color [0 0 255 200] :size 14}]
-                      :offset 20)
+                      :offset 20
+                      :font "Montserrat Regular")
     (q/pop-matrix)
     
     (q/push-matrix)
@@ -111,7 +115,7 @@
     (draw-signature :color [142 150 255])
     (q/pop-matrix)))
 
-(defn upd-state [{:keys [w h]}]
+(defn upd-state [{:keys [w h] :as original}]
   (let [displ (* 0.1 h)
         dh (* 0.36 h)
         r (* 0.2 h)
@@ -120,38 +124,39 @@
         layer-w (* 0.2 w)
         layer-displ (- (* 0.01 layer-h))
         layer-y #(+ (* 0.5 h) (* % (+ layer-h layer-displ)))]
-    {:w w
-     :h h
-     :go true
-     :background [0 0 0 250]
-     :color [140 250 250 230]
-     :parts [{:y (+ (* 0.5 h) (* 0 (+ layer-h layer-displ)))
-              :w layer-w
-              :h layer-h
-              :color [110 0 255 20]}
-             {:y (+ (* 0.5 h) (* 1 (+ layer-h layer-displ)))
-              :w layer-w
-              :h layer-h
-              :color [155 255 255 140]}
-             {:y (+ (* 0.5 h) (+ layer-h layer-displ) (+ (* 0.75 layer-h) layer-displ))
-              :w layer-w
-              :h (* 0.5 layer-h)
-              :color [44 255 255 160]}]
-     :pixels (do (q/random-seed 20)
-                 (->> (fn []
-                        {:color [(q/random 5 15) 255 0 (q/random 100 230)]
-                         :origin (let [y (q/random (- 0 r dh) r)]
-                                   [(q/random (- r) r)
-                                    y])
-                         :size 8})
-                      (repeatedly 10000)
-                      (filter (fn [{[x y] :origin}]
-                                (or (< (+ (* x x) (* y y)) (* r r))
-                                    (and (< y (- displ))
-                                         (> y (yfn x 1))
-                                         (> y (yfn x -1))))
-                                ))
-                      vec))}))
+    (merge
+     original
+     {:w w
+      :h h
+      :go true
+      :background [0 0 0 250]
+      :color [140 250 250 230]
+      :parts [{:y (+ (* 0.5 h) (* 0 (+ layer-h layer-displ)))
+               :w layer-w
+               :h layer-h
+               :color [110 0 255 20]}
+              {:y (+ (* 0.5 h) (* 1 (+ layer-h layer-displ)))
+               :w layer-w
+               :h layer-h
+               :color [155 255 255 140]}
+              {:y (+ (* 0.5 h) (+ layer-h layer-displ) (+ (* 0.75 layer-h) layer-displ))
+               :w layer-w
+               :h (* 0.5 layer-h)
+               :color [44 255 255 160]}]
+      :pixels (do (q/random-seed 20)
+                  (->> (fn []
+                         {:color [(q/random 5 15) 255 0 (q/random 100 230)]
+                          :origin (let [y (q/random (- 0 r dh) r)]
+                                    [(q/random (- r) r)
+                                     y])
+                          :size 8})
+                       (repeatedly 10000)
+                       (filter (fn [{[x y] :origin}]
+                                 (or (< (+ (* x x) (* y y)) (* r r))
+                                     (and (< y (- displ))
+                                          (> y (yfn x 1))
+                                          (> y (yfn x -1))))))
+                       vec))})))
 
 (q/defsketch atsketch
   :title "You spin my circle right round"
