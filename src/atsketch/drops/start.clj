@@ -114,6 +114,9 @@
     (q/rect-mode :center)
 
     (q/push-matrix)
+    (q/translate (* -0.15 screen-w) 0)
+
+    (q/push-matrix)
     (q/translate (- (* 0.5 screen-w) (* 0.5 (:w (first parts))) 20) (+ (* 0.3 screen-h) 20))
     (draw-strawbery)
     (q/pop-matrix)
@@ -126,9 +129,10 @@
                  :h (* 0.347 screen-h)
                  :bottom-h (* 0.5 (:h (first parts)))})
     (q/pop-matrix)
+    (q/pop-matrix)
     
     (q/push-matrix)
-    (q/translate (* 0.1 screen-w) (* 0.25 screen-h))
+    (q/translate (* 0.65 screen-w) (* 0.48 screen-h))
     (draw-description :lines [{:text "Sand Jinn" :color [155 255 255 220] :size 22 :offset -10 :line-height 1.1}
                               {:text "Limoncello, 1pt" :color [0 0 255 200] :size 14}
                               {:text "Blue curacao, 2pts" :color [0 0 255 200] :size 14}
@@ -139,7 +143,7 @@
     (q/pop-matrix)
     
     (q/push-matrix)
-    (q/translate (* 0.85 screen-w) (* 0.95 screen-h))
+    (q/translate (* 0.7 screen-w) (* 0.7 screen-h))
     (q/rotate (q/radians -12))
     (q/scale 2)
     (draw-signature :color [142 150 255])
