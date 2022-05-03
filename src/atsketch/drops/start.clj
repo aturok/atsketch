@@ -75,7 +75,7 @@
     (q/rect (+ (* 0.5 screen-w) (* 0.5 w) side-w flare-off) (- rim-w) flare-sw flare-h)
     (apply q/fill [0 0 0 50])
     (q/rect (+ (* 0.5 screen-w) (* 0.5 w) side-w (+ 2 flare-off)) (- rim-w) flare-sw flare-h)
-    (apply q/fill [0 0 255 25])
+    (apply q/fill [0 0 255 15])
     (q/rect (+ (* 0.5 screen-w) (* 0.5 w) side-w (+ 2 flare-off)) (- rim-w) 2 flare-h)
     (apply q/fill [0 0 0 45])
     (q/rect (+ (* 0.5 screen-w) (* 0.5 w) side-w (+ 4 flare-off)) (- rim-w) flare-sw flare-h)
@@ -94,6 +94,10 @@
     (q/translate (* 0.5 screen-w) y)
     (apply q/fill color)
     (q/rect 0 0 w h)
+    (doseq [_ (range 2000)]
+      (q/stroke-weight 0)
+      (q/fill 0 0 255 (q/random 0 2))
+      (q/rect (q/random (* -0.5 w) (* 0.5 w)) (q/random (* -0.5 h) (* 0.5 h)) (q/random 2 8) (q/random 2 8)))
     (q/pop-matrix)))
 
 (defn draw-description [& {:keys [lines size line-height font]}]
@@ -113,6 +117,7 @@
 
 (defn draw-state [{:keys [background go parts fonts]}]
   (when go
+    (q/no-stroke)
     (apply q/background background)
     (q/fill 0 0 0 0)
     (q/stroke-weight 0)
@@ -125,9 +130,9 @@
     (q/translate (- (* 0.5 screen-w) (* 0.5 (:w (first parts))) 20) (+ (* 0.35 screen-h) 0))
     (draw-strawbery)
     (q/pop-matrix)
-    
+
     (draw-parts parts)
-    
+
     (q/push-matrix)
     (q/translate 0 (* 0.4 screen-h))
     (draw-glass {:w (:w (first parts))
@@ -135,7 +140,7 @@
                  :bottom-h (* 0.5 (:h (first parts)))})
     (q/pop-matrix)
     (q/pop-matrix)
-    
+
     (q/push-matrix)
     (q/translate (* 0.65 screen-w) (* 0.48 screen-h))
     (draw-description :lines [{:text "Sand Jinn" :color [155 255 255 220] :size 22 :offset -10 :line-height 1.1}
@@ -146,7 +151,7 @@
                       :offset 20
                       :font "Montserrat Regular")
     (q/pop-matrix)
-    
+
     (q/push-matrix)
     (q/translate (* 0.7 screen-w) (* 0.7 screen-h))
     (q/rotate (q/radians -12))
