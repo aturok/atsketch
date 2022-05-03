@@ -1,7 +1,8 @@
 (ns atsketch.drops.start
   (:require [quil.core :as q]
             [quil.middleware :as m]
-            [atsketch.util :as util]))
+            [atsketch.util :as util]
+            [atsketch.signature :refer [draw-signature]]))
 
 (defn draw-pixel [{:keys [color size]}]
   (apply q/fill color)
@@ -101,6 +102,13 @@
                               {:text "Gin, 2pts" :color [0 0 255 200] :size 14}
                               {:text "Strawberry" :color [0 0 255 200] :size 14}]
                       :offset 20)
+    (q/pop-matrix)
+    
+    (q/push-matrix)
+    (q/translate (* 0.85 screen-w) (* 0.95 screen-h))
+    (q/rotate (q/radians -12))
+    (q/scale 2)
+    (draw-signature :color [142 150 255])
     (q/pop-matrix)))
 
 (defn upd-state [{:keys [w h]}]
