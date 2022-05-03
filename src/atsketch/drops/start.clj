@@ -51,6 +51,14 @@
 
   (q/pop-matrix))
 
+(defn- draw-parts [parts]
+  (doseq [{:keys [y w h color]} parts]
+    (q/push-matrix)
+    (q/translate (* 0.5 screen-w) y)
+    (apply q/fill color)
+    (q/rect 0 0 w h)
+    (q/pop-matrix)))
+
 (defn draw-description [& {:keys [lines size line-height]}]
   (q/push-matrix)
   (let [main-text-size (or size 16)
@@ -75,13 +83,8 @@
     (q/translate (- (* 0.5 screen-w) (* 0.5 (:w (first parts))) 20) (+ (* 0.3 screen-h) 20))
     (draw-strawbery)
     (q/pop-matrix)
-
-    (doseq [{:keys [y w h color] :as part} parts]
-      (q/push-matrix)
-      (q/translate (* 0.5 screen-w) y)
-      (apply q/fill color)
-      (q/rect 0 0 w h)
-      (q/pop-matrix))
+    
+    (draw-parts parts)
     
     (q/push-matrix)
     (q/translate 0 (* 0.4 screen-h))
