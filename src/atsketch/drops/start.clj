@@ -51,6 +51,17 @@
           w
           (- h bottom-h))
 
+  (let [flare-h (+ h rim-w)
+        flare-off -7]
+    (apply q/fill [0 0 255 125])
+    (q/rect (- (* 0.5 screen-w) (* 0.5 w) side-w flare-off) (- rim-w) 1 flare-h)
+    (apply q/fill [0 0 255 200])
+    (q/rect (- (* 0.5 screen-w) (* 0.5 w) side-w (+ 1 flare-off)) (- rim-w) 1 flare-h)
+    (apply q/fill [0 0 255 125])
+    (q/rect (- (* 0.5 screen-w) (* 0.5 w) side-w (+ 2 flare-off)) (- rim-w) 1 flare-h)
+    (apply q/fill [0 0 255 100])
+    (q/rect (- (* 0.5 screen-w) (* 0.5 w) side-w (+ 3 flare-off)) (- rim-w) 1 flare-h))
+
   (q/pop-matrix))
 
 (defn- draw-parts [parts]
