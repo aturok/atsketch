@@ -15,16 +15,21 @@
 (def screen-h h)
 
 (defn- draw-strawbery []
-  (q/rotate (q/radians 60))
-  (apply q/fill [10 255 200 240])
-  (q/rect-mode :corner)
-  (q/rect 0 0 150 105)
-  
-  (apply q/fill [10 100 255 200])
-  (q/rect-mode :corner)
-  (doseq [_ (range 60)]
-    (q/rect (q/random 5 145) (q/random 5 100) (q/random 2 4) (q/random 2 4)))
-  (q/rect-mode :center))
+  (let [tx 62 ty 140.0
+        lline #(+ (- ty 10) (* (/ (- ty 10) (- tx 5)) %))
+        rline #(- (- ty 10) (* (/ (- ty 10) (- tx 5)) %))]
+    (q/rotate (q/radians -20))
+    (apply q/fill [10 255 200 240])
+    (q/rect-mode :corner)
+    (q/triangle (- tx) 0 tx 0 0 ty)
+
+    (apply q/fill [10 100 255 200])
+    (q/rect-mode :corner)
+    (doseq [_ (range 100)]
+      (let [[x y] [(q/random (- tx) tx) (q/random 0 ty)]]
+        (when (and (<= y (lline x)) (<= y (rline x)))
+          (q/rect x y (q/random 2 4) (q/random 2 4)))))
+    (q/rect-mode :center)))
 
 (defn- draw-glass [{:keys [w h bottom-h side-w rim-w]
                     :or {side-w 10
@@ -117,7 +122,7 @@
     (q/translate (* -0.15 screen-w) 0)
 
     (q/push-matrix)
-    (q/translate (- (* 0.5 screen-w) (* 0.5 (:w (first parts))) 20) (+ (* 0.3 screen-h) 20))
+    (q/translate (- (* 0.5 screen-w) (* 0.5 (:w (first parts))) 20) (+ (* 0.35 screen-h) 0))
     (draw-strawbery)
     (q/pop-matrix)
     
