@@ -168,7 +168,7 @@
               {:y (+ (* 0.5 h) (* 1 (+ layer-h layer-displ)))
                :w layer-w
                :h layer-h
-               :color [155 255 255 140]}
+               :color [175 255 255 140]}
               {:y (+ (* 0.5 h) (+ layer-h layer-displ) (+ (* 0.75 layer-h) layer-displ))
                :w layer-w
                :h (* 0.5 layer-h)
