@@ -143,11 +143,11 @@
 
     (q/push-matrix)
     (q/translate (* 0.65 screen-w) (* 0.48 screen-h))
-    (draw-description :lines [{:text "Sand Jinn" :color [155 255 255 220] :size 22 :offset -10 :line-height 1.1}
-                              {:text "Limoncello, 1pt" :color [0 0 255 200] :size 14}
-                              {:text "Blue curacao, 2pts" :color [0 0 255 200] :size 14}
-                              {:text "Gin, 2pts" :color [0 0 255 200] :size 14}
-                              {:text "Strawberry" :color [0 0 255 200] :size 14}]
+    (draw-description :lines [{:text "Sand Jinn" :color [155 255 255 220] :size 26 :offset -10 :line-height 1.1}
+                              {:text "Limoncello, 1pt" :color [0 0 255 200] :size 20}
+                              {:text "Blue curacao, 2pts" :color [0 0 255 200] :size 20}
+                              {:text "Gin, 2pts" :color [0 0 255 200] :size 20}
+                              {:text "Strawberry" :color [0 0 255 200] :size 20}]
                       :offset 20
                       :font "Montserrat Regular")
     (q/pop-matrix)
@@ -155,8 +155,8 @@
     (q/push-matrix)
     (q/translate (* 0.7 screen-w) (* 0.7 screen-h))
     (q/rotate (q/radians -12))
-    (q/scale 2)
-    (draw-signature :color [162 200 255])
+    (q/scale 3)
+    (draw-signature :color [162 0 255])
     (q/pop-matrix)))
 
 (defn upd-state [{:keys [w h] :as original}]
