@@ -22,7 +22,7 @@
   
   (apply q/fill [10 100 255 200])
   (q/rect-mode :corner)
-  (doseq [_ (range 20)]
+  (doseq [_ (range 60)]
     (q/rect (q/random 5 145) (q/random 5 100) (q/random 2 4) (q/random 2 4)))
   (q/rect-mode :center))
 
