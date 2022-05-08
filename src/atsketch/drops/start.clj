@@ -5,21 +5,17 @@
             [atsketch.util :as util]
             [atsketch.signature :refer [draw-signature]]))
 
-(defn draw-pixel [{:keys [color size]}]
-  (apply q/fill color)
-  (q/rect 0 0 size size))
-
 (def w 1000)
 (def h w)
 (def screen-w w)
 (def screen-h h)
 
-(defn- draw-strawbery []
+(defn- draw-strawbery [color]
   (let [tx 62 ty 140.0
         lline #(+ (- ty 10) (* (/ (- ty 10) (- tx 5)) %))
         rline #(- (- ty 10) (* (/ (- ty 10) (- tx 5)) %))]
     (q/rotate (q/radians -20))
-    (apply q/fill [10 255 200 240])
+    (apply q/fill color)
     (q/rect-mode :corner)
     (q/triangle (- tx) 0 tx 0 0 ty)
 
@@ -115,7 +111,7 @@
                   lines))
     (q/pop-matrix)))
 
-(defn draw-state [{:keys [background go parts fonts]}]
+(defn draw-state [{:keys [background go parts fonts strawberry]}]
   (when go
     (q/no-stroke)
     (apply q/background background)
@@ -128,7 +124,7 @@
 
     (q/push-matrix)
     (q/translate (- (* 0.5 screen-w) (* 0.5 (:w (first parts))) 20) (+ (* 0.35 screen-h) 0))
-    (draw-strawbery)
+    (draw-strawbery (or (:color strawberry) [10 255 200 240]))
     (q/pop-matrix)
 
     (draw-parts parts)
@@ -159,6 +155,10 @@
     (draw-signature :color [162 0 255])
     (q/pop-matrix)))
 
+(defn- randomize-hue [[h & other] & {:keys [width]
+                                     :or {width 10}}]
+  (into [(q/random (Math/max 0 (- h width)) (Math/min 255 (+ h width)))] other))
+
 (defn upd-state [{:keys [w h] :as original}]
   (let [displ (* 0.1 h)
         dh (* 0.36 h)
@@ -175,18 +175,19 @@
       :go true
       :background [0 0 0 250]
       :color [140 250 250 230]
+      :strawberry {:color (randomize-hue [10 255 200 240])}
       :parts [{:y (+ (* 0.5 h) (* 0 (+ layer-h layer-displ)))
                :w layer-w
                :h layer-h
-               :color [110 0 255 20]}
+               :color  (randomize-hue [110 0 255 20])}
               {:y (+ (* 0.5 h) (* 1 (+ layer-h layer-displ)))
                :w layer-w
                :h layer-h
-               :color [175 255 255 140]}
+               :color (randomize-hue [175 255 255 140])}
               {:y (+ (* 0.5 h) (+ layer-h layer-displ) (+ (* 0.75 layer-h) layer-displ))
                :w layer-w
                :h (* 0.5 layer-h)
-               :color [44 255 255 160]}]
+               :color (randomize-hue [44 255 255 160])}]
       :pixels (do (q/random-seed 20)
                   (->> (fn []
                          {:color [(q/random 5 15) 255 0 (q/random 100 230)]
