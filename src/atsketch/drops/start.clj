@@ -149,7 +149,7 @@
                               {:text "Gin, 2pts" :color [0 0 255 200] :size 20}
                               {:text "Strawberry" :color [0 0 255 200] :size 20}]
                       :offset 20
-                      :font "Montserrat Regular")
+                      :font "Space Mono")
     (q/pop-matrix)
 
     (q/push-matrix)
@@ -206,6 +206,7 @@
   :title "You spin my circle right round"
   :size [w h]
   :setup (fn setup []
+           (prn (q/available-fonts))
            (q/frame-rate 30)
            (q/color-mode :hsb)
            {:w w
