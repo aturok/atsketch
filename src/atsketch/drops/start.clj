@@ -10,6 +10,33 @@
 (def screen-w w)
 (def screen-h h)
 
+(defn- randomc [c w]
+  (cond 
+    (not c) c
+    (zero? w) c
+    :else (q/random (Math/max 0 (- c w)) (Math/min 255 (+ c w)))))
+
+(defn- randomize-color [[h s l a] & {:keys [hw sw lw aw]
+                                     :or {hw 0 sw 0 lw 0 aw 0}}]
+  (filterv some? (map randomc [h s l a] [hw sw lw aw])))
+
+(defn- draw-glitter-piece [{[h s l a] :color :keys [x y spread rotate]
+                            :or {spread 6
+                                 rotate 0}}]
+  (q/push-matrix)
+  (q/rect-mode :corner)
+  (q/translate x y)
+  (q/rotate rotate)
+  (doseq [x? [true false]
+          p (range (- spread) spread)]
+    (apply q/fill [h s l (* a (/ (- spread (Math/abs p)) 10))])
+    (q/rect (if x? p 0) (if x? 0 p) 1 1))
+  (q/pop-matrix))
+
+(defn- draw-glitter [pieces]
+  (doseq [p pieces]
+    (draw-glitter-piece p)))
+
 (defn- draw-strawbery [color]
   (let [tx 62 ty 140.0
         lline #(+ (- ty 10) (* (/ (- ty 10) (- tx 5)) %))
@@ -111,13 +138,15 @@
                   lines))
     (q/pop-matrix)))
 
-(defn draw-state [{:keys [background go parts fonts strawberry]}]
+(defn draw-state [{:keys [background go parts fonts strawberry glitter]}]
   (when go
     (q/no-stroke)
     (apply q/background background)
     (q/fill 0 0 0 0)
     (q/stroke-weight 0)
     (q/rect-mode :center)
+
+    (draw-glitter (or glitter []))
 
     (q/push-matrix)
     (q/translate (* -0.15 screen-w) 0)
@@ -160,6 +189,7 @@
   (into [(q/random (Math/max 0 (- h width)) (Math/min 255 (+ h width)))] other))
 
 (defn upd-state [{:keys [w h] :as original}]
+  (q/random-seed 20)
   (let [displ (* 0.1 h)
         dh (* 0.36 h)
         r (* 0.2 h)
@@ -188,20 +218,29 @@
                :w layer-w
                :h (* 0.5 layer-h)
                :color (randomize-hue [44 255 255 160])}]
-      :pixels (do (q/random-seed 20)
-                  (->> (fn []
-                         {:color [(q/random 5 15) 255 0 (q/random 100 230)]
-                          :origin (let [y (q/random (- 0 r dh) r)]
-                                    [(q/random (- r) r)
-                                     y])
-                          :size 8})
-                       (repeatedly 10000)
-                       (filter (fn [{[x y] :origin}]
-                                 (or (< (+ (* x x) (* y y)) (* r r))
-                                     (and (< y (- displ))
-                                          (> y (yfn x 1))
-                                          (> y (yfn x -1))))))
-                       vec))})))
+      :pixels (->> (fn []
+                     {:color [(q/random 5 15) 255 0 (q/random 100 230)]
+                      :origin (let [y (q/random (- 0 r dh) r)]
+                                [(q/random (- r) r)
+                                 y])
+                      :size 8})
+                   (repeatedly 10000)
+                   (filter (fn [{[x y] :origin}]
+                             (or (< (+ (* x x) (* y y)) (* r r))
+                                 (and (< y (- displ))
+                                      (> y (yfn x 1))
+                                      (> y (yfn x -1))))))
+                   vec)
+      
+      :glitter (->> #(assoc {}
+                            :x (q/random 0 w)
+                            :y (q/random 0 h)
+                            :color [(q/random 0 255) 50 250 200]
+                            :spread (q/random 3 16)
+                            :rotate (q/radians (q/random -10 10)))
+                    repeatedly
+                    (take (q/random 75 150))
+                    vec)})))
 
 (q/defsketch atsketch
   :title "You spin my circle right round"
