@@ -188,59 +188,69 @@
                                      :or {width 10}}]
   (into [(q/random (Math/max 0 (- h width)) (Math/min 255 (+ h width)))] other))
 
-(defn upd-state [{:keys [w h] :as original}]
-  (q/random-seed 20)
-  (let [displ (* 0.1 h)
-        dh (* 0.36 h)
-        r (* 0.2 h)
-        yfn #(- (* %1 (/ (- dh displ) (* %2 (Math/sqrt (- (* r r) (* displ displ)))))) dh)
-        layer-h (* 0.1 h)
-        layer-w (* 0.2 w)
-        layer-displ (- (* 0.01 layer-h))
-        layer-y #(+ (* 0.5 h) (* % (+ layer-h layer-displ)))]
-    (merge
-     original
-     {:w w
-      :h h
-      :go true
-      :background [0 0 0 250]
-      :color [140 250 250 230]
-      :strawberry {:color (randomize-hue [10 255 200 240])}
-      :parts [{:y (+ (* 0.5 h) (* 0 (+ layer-h layer-displ)))
-               :w layer-w
-               :h layer-h
-               :color  (randomize-hue [110 0 255 20])}
-              {:y (+ (* 0.5 h) (* 1 (+ layer-h layer-displ)))
-               :w layer-w
-               :h layer-h
-               :color (randomize-hue [175 255 255 140])}
-              {:y (+ (* 0.5 h) (+ layer-h layer-displ) (+ (* 0.75 layer-h) layer-displ))
-               :w layer-w
-               :h (* 0.5 layer-h)
-               :color (randomize-hue [44 255 255 160])}]
-      :pixels (->> (fn []
-                     {:color [(q/random 5 15) 255 0 (q/random 100 230)]
-                      :origin (let [y (q/random (- 0 r dh) r)]
-                                [(q/random (- r) r)
-                                 y])
-                      :size 8})
-                   (repeatedly 10000)
-                   (filter (fn [{[x y] :origin}]
-                             (or (< (+ (* x x) (* y y)) (* r r))
-                                 (and (< y (- displ))
-                                      (> y (yfn x 1))
-                                      (> y (yfn x -1))))))
-                   vec)
-      
-      :glitter (->> #(assoc {}
-                            :x (q/random 0 w)
-                            :y (q/random 0 h)
-                            :color [(q/random 0 255) 50 250 200]
-                            :spread (q/random 3 16)
-                            :rotate (q/radians (q/random -10 10)))
-                    repeatedly
-                    (take (q/random 75 150))
-                    vec)})))
+(defn upd-state [{:keys [w h step n-steps seed-basis] :as original
+                  :or {n-steps 1
+                       seed-basis 200}}]
+  (if (and (some? step) (>= step n-steps))
+    original
+    (do
+      (q/random-seed (+ seed-basis (or step 0)))
+
+      (let [displ (* 0.1 h)
+            dh (* 0.36 h)
+            r (* 0.2 h)
+            yfn #(- (* %1 (/ (- dh displ) (* %2 (Math/sqrt (- (* r r) (* displ displ)))))) dh)
+            layer-h (* 0.1 h)
+            layer-w (* 0.2 w)
+            layer-displ (- (* 0.01 layer-h))
+            layer-y #(+ (* 0.5 h) (* % (+ layer-h layer-displ)))]
+        (merge
+         original
+         {:step (cond
+                  (not step) 0
+                  (< step n-steps) (inc step)
+                  :else step)
+          :w w
+          :h h
+          :go true
+          :background [0 0 0 250]
+          :color [140 250 250 230]
+          :strawberry {:color (randomize-hue [10 255 200 240])}
+          :parts [{:y (+ (* 0.5 h) (* 0 (+ layer-h layer-displ)))
+                   :w layer-w
+                   :h layer-h
+                   :color  (randomize-hue [110 0 255 20])}
+                  {:y (+ (* 0.5 h) (* 1 (+ layer-h layer-displ)))
+                   :w layer-w
+                   :h layer-h
+                   :color (randomize-hue [175 255 255 140])}
+                  {:y (+ (* 0.5 h) (+ layer-h layer-displ) (+ (* 0.75 layer-h) layer-displ))
+                   :w layer-w
+                   :h (* 0.5 layer-h)
+                   :color (randomize-hue [44 255 255 160])}]
+          :pixels (->> (fn []
+                         {:color [(q/random 5 15) 255 0 (q/random 100 230)]
+                          :origin (let [y (q/random (- 0 r dh) r)]
+                                    [(q/random (- r) r)
+                                     y])
+                          :size 8})
+                       (repeatedly 10000)
+                       (filter (fn [{[x y] :origin}]
+                                 (or (< (+ (* x x) (* y y)) (* r r))
+                                     (and (< y (- displ))
+                                          (> y (yfn x 1))
+                                          (> y (yfn x -1))))))
+                       vec)
+
+          :glitter (->> #(assoc {}
+                                :x (q/random 0 w)
+                                :y (q/random 0 h)
+                                :color [(q/random 0 255) 50 250 200]
+                                :spread (q/random 3 16)
+                                :rotate (q/radians (q/random -10 10)))
+                        repeatedly
+                        (take (q/random 75 150))
+                        vec)})))))
 
 (q/defsketch atsketch
   :title "You spin my circle right round"
@@ -250,7 +260,8 @@
            (q/frame-rate 30)
            (q/color-mode :hsb)
            {:w w
-            :h h})
+            :h h
+            :n-steps 30})
   :settings (fn settings []
               (q/smooth))
   :update upd-state
