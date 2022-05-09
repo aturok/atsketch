@@ -37,22 +37,22 @@
   (doseq [p pieces]
     (draw-glitter-piece p)))
 
-(defn- draw-strawbery [color]
-  (let [tx 62 ty 140.0
-        lline #(+ (- ty 10) (* (/ (- ty 10) (- tx 5)) %))
-        rline #(- (- ty 10) (* (/ (- ty 10) (- tx 5)) %))]
-    (q/rotate (q/radians -20))
-    (apply q/fill color)
-    (q/rect-mode :corner)
-    (q/triangle (- tx) 0 tx 0 0 ty)
+(defn- draw-strawbery [{:keys [color peckles tx ty]
+                        :or {color [10 255 200 240]
+                             peckles []
+                             tx 62.0
+                             ty 140.0}}]
+  (q/rotate (q/radians -20))
+  (apply q/fill color)
+  (q/rect-mode :corner)
+  (q/triangle (- tx) 0 tx 0 0 ty)
 
-    (apply q/fill [10 100 255 200])
-    (q/rect-mode :corner)
-    (doseq [_ (range 100)]
-      (let [[x y] [(q/random (- tx) tx) (q/random 0 ty)]]
-        (when (and (<= y (lline x)) (<= y (rline x)))
-          (q/rect x y (q/random 2 4) (q/random 2 4)))))
-    (q/rect-mode :center)))
+  (apply q/fill [10 100 255 200])
+  (q/rect-mode :corner)
+  (doseq [{:keys [x y w h]} peckles]
+    (when x
+      (q/rect x y w h)))
+  (q/rect-mode :center))
 
 (defn- draw-glass [{:keys [w h bottom-h side-w rim-w]
                     :or {side-w 10
@@ -153,7 +153,7 @@
 
     (q/push-matrix)
     (q/translate (- (* 0.5 screen-w) (* 0.5 (:w (first parts))) 20) (+ (* 0.35 screen-h) 0))
-    (draw-strawbery (or (:color strawberry) [10 255 200 240]))
+    (draw-strawbery strawberry)
     (q/pop-matrix)
 
     (draw-parts parts)
@@ -188,6 +188,21 @@
                                      :or {width 10}}]
   (into [(q/random (Math/max 0 (- h width)) (Math/min 255 (+ h width)))] other))
 
+
+(defn- gen-strawberry []
+  (let [tx (+ 72.0 (* 10 (q/random-gaussian))) ty 140.0]
+    {:tx tx
+     :ty ty
+     :color (randomize-hue [10 255 200 240])
+     :peckles (->> (fn peckle [] (let [lline #(+ (- ty 10) (* (/ (- ty 10) (- tx 5)) %))
+                                       rline #(- (- ty 10) (* (/ (- ty 10) (- tx 5)) %))
+                                       [x y] [(q/random (- tx) tx) (q/random 0 ty)]]
+                                   (when (and (<= y (lline x)) (<= y (rline x)))
+                                     {:x x :y y :w (q/random 2 4) :h (q/random 2 4)})))
+                   repeatedly
+                   (take 100)
+                   (filterv some?))}))
+
 (defn upd-state [{:keys [w h step n-steps seed-basis] :as original
                   :or {n-steps 1
                        seed-basis 200}}]
@@ -215,7 +230,7 @@
           :go true
           :background [0 0 0 250]
           :color [140 250 250 230]
-          :strawberry {:color (randomize-hue [10 255 200 240])}
+          :strawberry (gen-strawberry)
           :parts [{:y (+ (* 0.5 h) (* 0 (+ layer-h layer-displ)))
                    :w layer-w
                    :h layer-h
