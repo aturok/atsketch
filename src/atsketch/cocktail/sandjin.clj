@@ -138,7 +138,7 @@
                   lines))
     (q/pop-matrix)))
 
-(defn draw-state [{:keys [background go parts fonts strawberry glitter signature-alpha]}]
+(defn draw-state [{:keys [background go parts fonts strawberry glitter signature-alpha] :as s}]
   (when go
     (q/no-stroke)
     (apply q/background background)
@@ -182,7 +182,10 @@
     (q/rotate (q/radians -12))
     (q/scale 3)
     (draw-signature :color [162 0 255] :alpha-feed signature-alpha)
-    (q/pop-matrix)))
+    (q/pop-matrix)
+    
+    (when-let [filename (-> s :save :filename)]
+      (q/save filename))))
 
 (defn- randomize-hue [[h & other] & {:keys [width]
                                      :or {width 10}}]
@@ -216,7 +219,7 @@
 
 (defn upd-state [{:keys [w h step n-steps seed-basis] :as original
                   :or {n-steps 1
-                       seed-basis 200}}]
+                       seed-basis 300}}]
   (if (and (some? step) (>= step n-steps))
     original
     (do
@@ -236,6 +239,9 @@
                   (not step) 0
                   (< step n-steps) (inc step)
                   :else step)
+          :save (when (< (or step 0) n-steps)
+                  {:filename (str "/out/sandjin/sj_" (format "%04d" seed-basis) "_" (format "%04d" step) ".png")})
+          :seed-basis seed-basis
           :w w
           :h h
           :go true
@@ -293,7 +299,7 @@
            (q/color-mode :hsb)
            {:w w
             :h h
-            :n-steps 30})
+            :n-steps 50})
   :settings (fn settings []
               (q/smooth))
   :update upd-state
