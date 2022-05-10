@@ -112,15 +112,15 @@
   (q/pop-matrix))
 
 (defn- draw-parts [parts]
-  (doseq [{:keys [y w h color]} parts]
+  (doseq [{:keys [y w h color noise]} parts]
     (q/push-matrix)
     (q/translate (* 0.5 screen-w) y)
     (apply q/fill color)
     (q/rect 0 0 w h)
-    (doseq [_ (range 2000)]
+    (doseq [{:keys [x y w h a]} noise]
       (q/stroke-weight 0)
-      (q/fill 0 0 255 (q/random 0 2))
-      (q/rect (q/random (* -0.5 w) (* 0.5 w)) (q/random (* -0.5 h) (* 0.5 h)) (q/random 2 8) (q/random 2 8)))
+      (q/fill 0 0 255 a)
+      (q/rect x y w h))
     (q/pop-matrix)))
 
 (defn draw-description [& {:keys [lines size line-height font]}]
@@ -138,7 +138,7 @@
                   lines))
     (q/pop-matrix)))
 
-(defn draw-state [{:keys [background go parts fonts strawberry glitter]}]
+(defn draw-state [{:keys [background go parts fonts strawberry glitter signature-alpha]}]
   (when go
     (q/no-stroke)
     (apply q/background background)
@@ -181,7 +181,7 @@
     (q/translate (* 0.7 screen-w) (* 0.7 screen-h))
     (q/rotate (q/radians -12))
     (q/scale 3)
-    (draw-signature :color [162 0 255])
+    (draw-signature :color [162 0 255] :alpha-feed signature-alpha)
     (q/pop-matrix)))
 
 (defn- randomize-hue [[h & other] & {:keys [width]
@@ -202,6 +202,17 @@
                    repeatedly
                    (take 100)
                    (filterv some?))}))
+
+(defn- gen-noise-in-rect [n w h]
+  (->> (fn []
+         {:x (q/random (* -0.5 w) (* 0.5 w))
+          :y (q/random (* -0.5 h) (* 0.5 h))
+          :w (q/random 2 8)
+          :h (q/random 2 8)
+          :a (q/random 0 2)})
+       repeatedly
+       (take n)
+       vec))
 
 (defn upd-state [{:keys [w h step n-steps seed-basis] :as original
                   :or {n-steps 1
@@ -234,15 +245,18 @@
           :parts [{:y (+ (* 0.5 h) (* 0 (+ layer-h layer-displ)))
                    :w layer-w
                    :h layer-h
-                   :color  (randomize-hue [110 0 255 20])}
+                   :color (randomize-hue [110 0 255 20])
+                   :noise (gen-noise-in-rect 2000 layer-w layer-h)}
                   {:y (+ (* 0.5 h) (* 1 (+ layer-h layer-displ)))
                    :w layer-w
                    :h layer-h
-                   :color (randomize-hue [175 255 255 140])}
+                   :color (randomize-hue [175 255 255 140])
+                   :noise (gen-noise-in-rect 2000 layer-w layer-h)}
                   {:y (+ (* 0.5 h) (+ layer-h layer-displ) (+ (* 0.75 layer-h) layer-displ))
                    :w layer-w
                    :h (* 0.5 layer-h)
-                   :color (randomize-hue [44 255 255 160])}]
+                   :color (randomize-hue [44 255 255 160])
+                   :noise (gen-noise-in-rect 1000 layer-w (* 0.5 layer-h))}]
           :pixels (->> (fn []
                          {:color [(q/random 5 15) 255 0 (q/random 100 230)]
                           :origin (let [y (q/random (- 0 r dh) r)]
@@ -265,13 +279,16 @@
                                 :rotate (q/radians (q/random -10 10)))
                         repeatedly
                         (take (q/random 75 150))
-                        vec)})))))
+                        vec)
+          :signature-alpha (->> #(q/random 80 110)
+                                repeatedly
+                                (take 500)
+                                vec)})))))
 
 (q/defsketch atsketch
   :title "You spin my circle right round"
   :size [w h]
   :setup (fn setup []
-           (prn (q/available-fonts))
            (q/frame-rate 30)
            (q/color-mode :hsb)
            {:w w
